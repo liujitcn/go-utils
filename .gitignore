@@ -1,0 +1,67 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+*.app
+
+# Go build output
+bin/
+build/
+dist/
+
+# Go workspace file
+go.work
+
+# Go coverage
+*.cover
+coverage.out
+cover.out
+
+# Dependency directories (optional if using Go Modules)
+vendor/
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Environment files
+.env
+.env.*
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# macOS
+.DS_Store
+
+# Linux
+*~
+
+# Windows
+Thumbs.db
+
+# Test binary
+*.test
+
+# Go cache
+.gocache/
+
+# Delve debugger
+__debug_bin
+
+# Local config
+config.local.yaml
+config.local.yml
+config.local.json
