@@ -1,4 +1,4 @@
-package str
+package string
 
 import (
 	"crypto/rand"
@@ -84,7 +84,6 @@ func GetRandomString(length int) string {
 	return randomString
 }
 
-// DesensitizePhone 手机号脱敏（保留前3位 + **** + 后4位）
 func DesensitizePhone(phone string) string {
 	// 校验是否为 11 位数字
 	if len(phone) != 11 {
@@ -110,17 +109,17 @@ func ConvertAnyToJsonString(s interface{}) string {
 	if err != nil {
 		if t.Kind() == reflect.Slice {
 			return "[]"
-		} else {
-			return "{}"
 		}
+
+		return "{}"
 	}
 	res := string(marshal)
 	if res == "null" {
 		if t.Kind() == reflect.Slice {
 			return "[]"
-		} else {
-			return "{}"
 		}
+
+		return "{}"
 	}
 
 	return res

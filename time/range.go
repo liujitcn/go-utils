@@ -1,4 +1,4 @@
-package timeutil
+package time
 
 import "time"
 
@@ -118,8 +118,8 @@ func GetLastYearRangeDateString() (string, string) {
 func GetYesterdayRangeTimeString() (string, string) {
 	firstDay, lastDay := GetYesterdayRangeTime()
 
-	startDate := firstDay.Format(TimeLayout)
-	endDate := lastDay.Format(TimeLayout)
+	startDate := firstDay.Format(Layout)
+	endDate := lastDay.Format(Layout)
 
 	return startDate, endDate
 }
@@ -128,8 +128,8 @@ func GetYesterdayRangeTimeString() (string, string) {
 func GetTodayRangeTimeString() (string, string) {
 	firstDay, lastDay := GetTodayRangeTime()
 
-	startDate := firstDay.Format(TimeLayout)
-	endDate := lastDay.Format(TimeLayout)
+	startDate := firstDay.Format(Layout)
+	endDate := lastDay.Format(Layout)
 
 	return startDate, endDate
 }
@@ -138,8 +138,8 @@ func GetTodayRangeTimeString() (string, string) {
 func GetLastMonthRangeTimeString() (string, string) {
 	firstDay, lastDay := GetLastMonthRangeTime()
 
-	startDate := firstDay.Format(TimeLayout)
-	endDate := lastDay.Format(TimeLayout)
+	startDate := firstDay.Format(Layout)
+	endDate := lastDay.Format(Layout)
 
 	return startDate, endDate
 }
@@ -148,8 +148,8 @@ func GetLastMonthRangeTimeString() (string, string) {
 func GetCurrentMonthRangeTimeString() (string, string) {
 	firstDay, lastDay := GetCurrentMonthRangeTime()
 
-	startDate := firstDay.Format(TimeLayout)
-	endDate := lastDay.Format(TimeLayout)
+	startDate := firstDay.Format(Layout)
+	endDate := lastDay.Format(Layout)
 
 	return startDate, endDate
 }
@@ -158,8 +158,8 @@ func GetCurrentMonthRangeTimeString() (string, string) {
 func GetLastYearRangeTimeString() (string, string) {
 	firstDay, lastDay := GetLastYearRangeTime()
 
-	startDate := firstDay.Format(TimeLayout)
-	endDate := lastDay.Format(TimeLayout)
+	startDate := firstDay.Format(Layout)
+	endDate := lastDay.Format(Layout)
 
 	return startDate, endDate
 }
@@ -168,8 +168,8 @@ func GetLastYearRangeTimeString() (string, string) {
 func GetCurrentYearRangeTimeString() (string, string) {
 	firstDay, lastDay := GetCurrentYearRangeTime()
 
-	startDate := firstDay.Format(TimeLayout)
-	endDate := lastDay.Format(TimeLayout)
+	startDate := firstDay.Format(Layout)
+	endDate := lastDay.Format(Layout)
 
 	return startDate, endDate
 }

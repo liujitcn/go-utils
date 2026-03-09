@@ -1,4 +1,4 @@
-package timeutil
+package time
 
 import (
 	"time"
@@ -19,7 +19,7 @@ func UnixMilliToStringPtr(tm *int64) *string {
 	if tm == nil {
 		return nil
 	}
-	str := time.UnixMilli(*tm).Format(TimeLayout)
+	str := time.UnixMilli(*tm).Format(Layout)
 	return &str
 }
 
@@ -46,7 +46,7 @@ func StringTimeToTime(str string) *time.Time {
 	var err error
 	var theTime time.Time
 
-	theTime, err = time.ParseInLocation(TimeLayout, str, DefaultTimeLocation)
+	theTime, err = time.ParseInLocation(Layout, str, DefaultTimeLocation)
 	if err == nil {
 		return &theTime
 	}
@@ -69,7 +69,7 @@ func TimeToTimeString(tm time.Time) string {
 	if tm.IsZero() {
 		return ""
 	}
-	return tm.Format(TimeLayout)
+	return tm.Format(Layout)
 }
 
 // StringDateToTime 字符串 -> 时间
@@ -88,7 +88,7 @@ func StringDateToTime(str *string) *time.Time {
 	var err error
 	var theTime time.Time
 
-	theTime, err = time.ParseInLocation(TimeLayout, *str, DefaultTimeLocation)
+	theTime, err = time.ParseInLocation(Layout, *str, DefaultTimeLocation)
 	if err == nil {
 		return &theTime
 	}

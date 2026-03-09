@@ -1,6 +1,7 @@
 package crypto
 
 import (
+	"crypto/subtle"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
@@ -114,11 +115,19 @@ func (e *ECDHCrypto) Verify(plainPassword, encrypted string) (bool, error) {
 		return false, errors.New("无效的公钥")
 	}
 
-	sharedX, _ := e.privateKey.Curve.ScalarMult(x, y, e.privateKey.D.Bytes())
-	expectedHash := sha256.Sum256(sharedX.Bytes())
-	actualHash := sha256.Sum256([]byte(plainPassword))
-
-	return expectedHash == actualHash, nil
+	remoteSharedX, _ := e.privateKey.Curve.ScalarMult(x, y, e.privateKey.D.Bytes())
+	if remoteSharedX == nil {
+		return false, errors.New("共享密钥计算失败")
+	}
+	expectedSecret, err := base64.StdEncoding.DecodeString(plainPassword)
+	if err != nil {
+		return false, errors.New("共享密钥格式无效")
+	}
+	actualSecret := remoteSharedX.Bytes()
+	if len(expectedSecret) != len(actualSecret) {
+		return false, nil
+	}
+	return subtle.ConstantTimeCompare(expectedSecret, actualSecret) == 1, nil
 }
 
 func (e *ECDHCrypto) DeriveSharedSecret(publicKey string) ([]byte, error) {

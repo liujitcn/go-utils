@@ -1,4 +1,4 @@
-package snowflake
+package id
 
 import (
 	"sync"
@@ -55,19 +55,16 @@ func (s *Snowflake) NextVal() int64 {
 	return r
 }
 
-// GetTimestamp 获取时间戳
 func GetTimestamp(sid int64) (timestamp int64) {
 	timestamp = (sid >> timestampShift) & timestampMax
 	return
 }
 
-// GetGenTimestamp 获取创建ID时的时间戳
 func GetGenTimestamp(sid int64) (timestamp int64) {
 	timestamp = GetTimestamp(sid) + epoch
 	return
 }
 
-// GetGenTime 获取创建ID时的时间字符串(精度：秒)
 func GetGenTime(sid int64) (t string) {
 	// 需将GetGenTimestamp获取的时间戳转换成秒
 	t = time.Unix(0, GetGenTimestamp(sid)*1e3).Format("2006-01-02 15:04:05.000")
