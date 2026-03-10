@@ -115,16 +115,16 @@ def process_module(module_dir: str, remote_ref: str) -> bool:
     nxt = next_tag(latest, prefix)
 
     if not has_remote_update(latest, remote_ref, module_dir):
-        print(f"{module_dir} => latest: {latest or '<none>'}, remote no updates, skip.")
+        print(f"{module_dir} => 最新 tag: {latest or '<无>'}，远程无更新，跳过。")
         return False
 
     if remote_tag_exists(nxt):
-        print(f"{module_dir} => remote tag {nxt} already exists, skip.")
+        print(f"{module_dir} => 远程 tag {nxt} 已存在，跳过。")
         return False
 
     ensure_local_tag(nxt, remote_ref)
     push_tag(nxt)
-    print(f"{module_dir} => pushed remote tag: {nxt} -> {remote_ref}")
+    print(f"{module_dir} => 已推送远程 tag: {nxt} -> {remote_ref}")
     return True
 
 
@@ -136,12 +136,12 @@ def main() -> int:
     try:
         run(["git", "fetch", "origin", "--tags"])
         remote_ref = detect_remote_ref()
-        print(f"Remote ref: {remote_ref}")
+        print(f"远程分支引用: {remote_ref}")
 
         if args.mode == "tag":
             ok = process_module(".", remote_ref)
             if not ok:
-                print("No root module remote updates, no tags pushed.")
+                print("根模块远程无更新，未推送任何 tag。")
             return 0
 
         pushed = False
@@ -149,7 +149,7 @@ def main() -> int:
             if process_module(d, remote_ref):
                 pushed = True
         if not pushed:
-            print("No module has remote updates, no tags pushed.")
+            print("所有模块远程均无更新，未推送任何 tag。")
         return 0
     except RuntimeError as err:
         print(str(err), file=sys.stderr)
