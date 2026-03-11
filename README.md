@@ -13,7 +13,7 @@ go get github.com/liujitcn/go-utils@latest
 - `github.com/liujitcn/go-utils`：根包 `utils`（统计时间与金额转换）
 - `github.com/liujitcn/go-utils/byte`：`int` 与 `[]byte` 转换、ASCII 大小写字节转换
 - `github.com/liujitcn/go-utils/crypto`：密码学工具（独立子模块）
-- `github.com/liujitcn/go-utils/id`：Snowflake、UUIDv4/v7、KSUID、XID、Mongo ObjectID
+- `github.com/liujitcn/go-utils/id`：Snowflake、UUIDv4/v7、XID
 - `github.com/liujitcn/go-utils/io`：文件读取、路径匹配、文件属性判断
 - `github.com/liujitcn/go-utils/jwt`：JWT 生成/解析/校验（独立子模块）
 - `github.com/liujitcn/go-utils/map`：泛型 map 工具
@@ -55,11 +55,11 @@ import (
 )
 
 func main() {
-	sf, _ := id.NewSnowflake()
-	sid := sf.NextVal()
+	sid := id.GenSnowflakeID()
 	fmt.Println(sid, id.GetGenTime(sid))
 
-	fmt.Println(id.NewGUIDv7(true))
+	fmt.Println(id.NewGUIDv7())
+	fmt.Println(id.NewGUIDv7NoHyphen())
 	fmt.Println(id.NewXID())
 }
 ```
@@ -130,6 +130,8 @@ import (
 func main() {
 	fmt.Println(strutil.ConvertStringToInt64Array("1,2, 3"))
 	fmt.Println(strutil.DesensitizePhone("13812345678"))
+	fmt.Println(strutil.ConvertYuanStringToFen("12.34")) // 1234
+	fmt.Println(strutil.ConvertFenToYuanString(1234))    // 12.34
 }
 ```
 

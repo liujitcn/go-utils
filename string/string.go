@@ -3,6 +3,7 @@ package string
 import (
 	"crypto/rand"
 	"encoding/json"
+	"fmt"
 	"math/big"
 	"reflect"
 	"strconv"
@@ -123,4 +124,53 @@ func ConvertAnyToJsonString(s interface{}) string {
 	}
 
 	return res
+}
+
+// ConvertYuanStringToFen 将金额元（字符串）转换为分，按“分”四舍五入
+func ConvertYuanStringToFen(yuan string) int64 {
+	trimmed := strings.TrimSpace(yuan)
+	if trimmed == "" {
+		return 0
+	}
+
+	rat := new(big.Rat)
+	if _, ok := rat.SetString(trimmed); !ok {
+		return 0
+	}
+
+	rat.Mul(rat, big.NewRat(100, 1))
+
+	num := new(big.Int).Set(rat.Num())
+	den := new(big.Int).Set(rat.Denom())
+
+	q := new(big.Int).Quo(num, den)
+	rem := new(big.Int).Rem(num, den)
+
+	absDoubleRem := new(big.Int).Mul(new(big.Int).Abs(rem), big.NewInt(2))
+	absDen := new(big.Int).Abs(den)
+	if absDoubleRem.Cmp(absDen) >= 0 {
+		if num.Sign() >= 0 {
+			q.Add(q, big.NewInt(1))
+		} else {
+			q.Sub(q, big.NewInt(1))
+		}
+	}
+
+	if !q.IsInt64() {
+		return 0
+	}
+	return q.Int64()
+}
+
+// ConvertFenToYuanString 将金额分转换为金额元字符串（保留 2 位小数）
+func ConvertFenToYuanString(fen int64) string {
+	sign := ""
+	if fen < 0 {
+		sign = "-"
+		fen = -fen
+	}
+
+	intPart := fen / 100
+	fracPart := fen % 100
+	return fmt.Sprintf("%s%d.%02d", sign, intPart, fracPart)
 }

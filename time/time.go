@@ -1,8 +1,7 @@
-package utils
+package time
 
 import (
 	"fmt"
-	"strconv"
 	"time"
 )
 
@@ -58,13 +57,4 @@ func FormatDate(timeType TimeType, key int) string {
 	default:
 		return fmt.Sprintf("%d日", key+1)
 	}
-}
-
-// ConvertYuanToFen 元转分
-func ConvertYuanToFen(yuan string) int64 {
-	float, err := strconv.ParseFloat(yuan, 64)
-	if err != nil {
-		return 0
-	}
-	return int64(float * 100)
 }

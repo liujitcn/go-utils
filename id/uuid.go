@@ -6,13 +6,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/lithammer/shortuuid/v4"
 	"github.com/rs/xid"
-	"github.com/segmentio/ksuid"
-	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
-func NewGUIDv4(withHyphen bool) string {
-	u := uuid.New()
-
+func formatUUID(u uuid.UUID, withHyphen bool) string {
 	if withHyphen {
 		return u.String()
 	}
@@ -22,35 +18,38 @@ func NewGUIDv4(withHyphen bool) string {
 	return string(buf[:])
 }
 
-func NewGUIDv7(withHyphen bool) string {
+func NewGUIDv4() string {
+	return formatUUID(uuid.New(), true)
+}
+
+func NewGUIDv4NoHyphen() string {
+	return formatUUID(uuid.New(), false)
+}
+
+func NewGUIDv7() string {
 	u, err := uuid.NewV7()
 	if err != nil {
-		// Fallback to v4 if system clock is unreliable
-		return NewGUIDv4(withHyphen)
+		// 系统时钟异常时回退到 v4，避免返回空值
+		return NewGUIDv4()
 	}
 
-	if withHyphen {
-		return u.String()
+	return formatUUID(u, true)
+}
+
+func NewGUIDv7NoHyphen() string {
+	u, err := uuid.NewV7()
+	if err != nil {
+		// 系统时钟异常时回退到 v4，避免返回空值
+		return NewGUIDv4NoHyphen()
 	}
 
-	var buf [32]byte
-	hex.Encode(buf[:], u[:])
-	return string(buf[:])
+	return formatUUID(u, false)
 }
 
 func NewShortUUID() string {
 	return shortuuid.New()
 }
 
-func NewKSUID() string {
-	return ksuid.New().String()
-}
-
 func NewXID() string {
 	return xid.New().String()
-}
-
-func NewMongoObjectID() string {
-	objID := bson.NewObjectID()
-	return objID.String()
 }
