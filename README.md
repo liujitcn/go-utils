@@ -175,8 +175,9 @@ cd jwt && go test ./...
 ## 打 Tag
 
 ```bash
-make tag     # 根模块：仅根据远程仓库更新状态决定是否打并推送远程 tag（不提交代码）
-make sub-tag # 多模块：递归检查 go.mod 目录，仅根据远程仓库更新状态为模块打并推送远程 tag（不提交代码）
+make tag                    # 默认从仓库根目录递归检查 go.mod 并自动打/推送 tag（含根模块）
+make tag MODULE=crypto      # 从 crypto 目录开始递归检查 go.mod 并打 tag
+make tag MODULE=stringcase  # 从 stringcase 目录开始递归检查 go.mod 并打 tag
 ```
 
 说明：上述命令通过 `python3 scripts/tag_release.py` 执行统一的版本计算与远程更新检测逻辑。
