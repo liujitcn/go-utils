@@ -2,11 +2,6 @@
 
 `go-utils` 是一个通用 Go 工具库，覆盖常用的 ID 生成、时间处理、集合操作、字符串转换、文件路径与 TLS/JWT/密码学能力。
 
-## 来源与版权说明
-
-本仓库大部分代码来源于开源项目 [tx7do/go-utils](https://github.com/tx7do/go-utils)，在此基础上结合当前项目需求进行了整理与调整。  
-若涉及版权或授权边界问题，请优先以上游项目许可证与仓库声明为准，并联系维护者处理。
-
 ## 安装
 
 ```bash
@@ -186,3 +181,8 @@ make tag MODULE=stringcase  # 从 stringcase 目录开始递归检查 go.mod 并
 ```
 
 说明：上述命令通过 `python3 scripts/tag_release.py` 执行统一的版本计算与远程更新检测逻辑。
+
+## 来源与版权说明
+
+本仓库大部分代码来源于开源项目 [tx7do/go-utils](https://github.com/tx7do/go-utils)，在此基础上结合当前项目需求进行了整理与调整。  
+若涉及版权或授权边界问题，请优先以上游项目许可证与仓库声明为准，并联系维护者处理。
