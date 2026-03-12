@@ -3,6 +3,7 @@ package crypto
 import (
 	"errors"
 	"strings"
+	"sync"
 )
 
 // Crypto 密码加解密接口
@@ -15,7 +16,7 @@ type Crypto interface {
 }
 
 func NewCrypto(algorithm string) (Crypto, error) {
-	algorithm = strings.ToLower(algorithm)
+	algorithm = strings.ToLower(strings.TrimSpace(algorithm))
 	switch algorithm {
 	case "bcrypt":
 		return NewBCryptCrypto(), nil
@@ -34,4 +35,35 @@ func NewCrypto(algorithm string) (Crypto, error) {
 	default:
 		return nil, errors.New("不支持的加密算法")
 	}
+}
+
+const defaultAlgorithm = "bcrypt"
+
+var (
+	defaultCrypto     Crypto
+	defaultCryptoErr  error
+	defaultCryptoOnce sync.Once
+)
+
+// newDefaultCrypto 返回默认加密器的单例实例。
+func newDefaultCrypto() {
+	defaultCryptoOnce.Do(func() {
+		defaultCrypto, defaultCryptoErr = NewCrypto(defaultAlgorithm)
+	})
+}
+
+func Encrypt(plainPassword string) (string, error) {
+	newDefaultCrypto()
+	if defaultCryptoErr != nil {
+		return "", defaultCryptoErr
+	}
+	return defaultCrypto.Encrypt(plainPassword)
+}
+
+func Verify(plainPassword, encrypted string) (bool, error) {
+	newDefaultCrypto()
+	if defaultCryptoErr != nil {
+		return false, defaultCryptoErr
+	}
+	return defaultCrypto.Verify(plainPassword, encrypted)
 }
