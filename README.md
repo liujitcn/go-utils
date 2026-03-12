@@ -13,6 +13,7 @@ go get github.com/liujitcn/go-utils@latest
 - `github.com/liujitcn/go-utils`：根包 `utils`（统计时间与金额转换）
 - `github.com/liujitcn/go-utils/byte`：`int` 与 `[]byte` 转换、ASCII 大小写字节转换
 - `github.com/liujitcn/go-utils/crypto`：密码学工具（独立子模块）
+- `github.com/liujitcn/go-utils/geoip`：IP 地理位置查询（GeoLite2 / 纯真 / IP2Region）
 - `github.com/liujitcn/go-utils/id`：Snowflake、UUIDv4/v7、XID
 - `github.com/liujitcn/go-utils/io`：文件读取、路径匹配、文件属性判断
 - `github.com/liujitcn/go-utils/jwt`：JWT 生成/解析/校验（独立子模块）
@@ -153,9 +154,31 @@ func main() {
 }
 ```
 
+### `geoip`
+
+```go
+package main
+
+import (
+	"fmt"
+
+	"github.com/liujitcn/go-utils/geoip/qqwry"
+)
+
+func main() {
+	client := qqwry.NewClient()
+	ret, err := client.Query("47.108.149.89")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("country=%s province=%s city=%s isp=%s\n", ret.Country, ret.Province, ret.City, ret.ISP)
+}
+```
+
 ## 子模块说明
 
 - `crypto`：见 [crypto/README.md](crypto/README.md)
+- `geoip`：见 [geoip/README.md](geoip/README.md)
 - `stringcase`：见 [stringcase/README.md](stringcase/README.md)
 - ECDH 使用建议：先通过 `Encrypt` 交换公钥，再用 `DeriveSharedSecret` 生成共享密钥；`Verify` 的第一个参数需传共享密钥的 Base64 字符串。
 
@@ -172,6 +195,7 @@ go test ./...
 ```bash
 cd crypto && go test ./...
 cd jwt && go test ./...
+cd geoip && go test ./...
 ```
 
 ## 打 Tag
