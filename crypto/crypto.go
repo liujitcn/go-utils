@@ -52,6 +52,7 @@ func newDefaultCrypto() {
 	})
 }
 
+// Encrypt 加密数据
 func Encrypt(plainPassword string) (string, error) {
 	newDefaultCrypto()
 	if defaultCryptoErr != nil {
@@ -60,6 +61,7 @@ func Encrypt(plainPassword string) (string, error) {
 	return defaultCrypto.Encrypt(plainPassword)
 }
 
+// Verify 验证加密数据
 func Verify(plainPassword, encrypted string) (bool, error) {
 	newDefaultCrypto()
 	if defaultCryptoErr != nil {
