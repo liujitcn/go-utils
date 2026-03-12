@@ -1,4 +1,4 @@
-module github.com/liujitcn/go-utils/password
+module github.com/liujitcn/go-utils/crypto
 
 go 1.26.0
 
