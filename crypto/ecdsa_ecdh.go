@@ -47,14 +47,14 @@ func (e *ECDSACrypto) Encrypt(plainPassword string) (string, error) {
 }
 
 // Verify 验证消息的签名是否有效
-func (e *ECDSACrypto) Verify(plainPassword, encrypted string) (bool, error) {
+func (e *ECDSACrypto) Verify(plainPassword, encrypted string) error {
 	if plainPassword == "" || encrypted == "" {
-		return false, errors.New("密码或加密字符串不能为空")
+		return errors.New("密码或加密字符串不能为空")
 	}
 
 	parts := strings.SplitN(encrypted, "$", 3)
 	if len(parts) != 3 || parts[0] != "ecdsa" {
-		return false, errors.New("加密字符串格式无效")
+		return errors.New("加密字符串格式无效")
 	}
 
 	r := new(big.Int)
@@ -63,7 +63,10 @@ func (e *ECDSACrypto) Verify(plainPassword, encrypted string) (bool, error) {
 	s.SetString(parts[2], 10)
 
 	hash := sha256.Sum256([]byte(plainPassword))
-	return ecdsa.Verify(e.publicKey, hash[:], r, s), nil
+	if !ecdsa.Verify(e.publicKey, hash[:], r, s) {
+		return errors.New("签名验证失败")
+	}
+	return nil
 }
 
 // ECDHCrypto 实现基于 ECDH 的密钥交换
@@ -95,39 +98,42 @@ func (e *ECDHCrypto) Encrypt(plainPassword string) (string, error) {
 }
 
 // Verify 验证共享密钥是否一致
-func (e *ECDHCrypto) Verify(plainPassword, encrypted string) (bool, error) {
+func (e *ECDHCrypto) Verify(plainPassword, encrypted string) error {
 	if plainPassword == "" || encrypted == "" {
-		return false, errors.New("密码或加密字符串不能为空")
+		return errors.New("密码或加密字符串不能为空")
 	}
 
 	parts := strings.SplitN(encrypted, "$", 2)
 	if len(parts) != 2 || parts[0] != "ecdh" {
-		return false, errors.New("加密字符串格式无效")
+		return errors.New("加密字符串格式无效")
 	}
 
 	publicKeyBytes, err := base64.StdEncoding.DecodeString(parts[1])
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	x, y := elliptic.Unmarshal(e.privateKey.Curve, publicKeyBytes)
 	if x == nil || y == nil {
-		return false, errors.New("无效的公钥")
+		return errors.New("无效的公钥")
 	}
 
 	remoteSharedX, _ := e.privateKey.Curve.ScalarMult(x, y, e.privateKey.D.Bytes())
 	if remoteSharedX == nil {
-		return false, errors.New("共享密钥计算失败")
+		return errors.New("共享密钥计算失败")
 	}
 	expectedSecret, err := base64.StdEncoding.DecodeString(plainPassword)
 	if err != nil {
-		return false, errors.New("共享密钥格式无效")
+		return errors.New("共享密钥格式无效")
 	}
 	actualSecret := remoteSharedX.Bytes()
 	if len(expectedSecret) != len(actualSecret) {
-		return false, nil
+		return errors.New("共享密钥不匹配")
 	}
-	return subtle.ConstantTimeCompare(expectedSecret, actualSecret) == 1, nil
+	if subtle.ConstantTimeCompare(expectedSecret, actualSecret) != 1 {
+		return errors.New("共享密钥不匹配")
+	}
+	return nil
 }
 
 func (e *ECDHCrypto) DeriveSharedSecret(publicKey string) ([]byte, error) {

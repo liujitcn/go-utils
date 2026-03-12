@@ -18,13 +18,9 @@ func TestSHACrypto_EncryptAndVerify_SHA256(t *testing.T) {
 	}
 	t.Log(encrypted)
 
-	isValid, err := crypto.Verify(password, encrypted)
+	err = crypto.Verify(password, encrypted)
 	if err != nil {
 		t.Fatalf("验证失败: %v", err)
-	}
-
-	if !isValid {
-		t.Fatal("验证结果不匹配")
 	}
 }
 
@@ -42,12 +38,8 @@ func TestSHACrypto_EncryptAndVerify_SHA512(t *testing.T) {
 	}
 	t.Log(encrypted)
 
-	isValid, err := crypto.Verify(password, encrypted)
+	err = crypto.Verify(password, encrypted)
 	if err != nil {
 		t.Fatalf("验证失败: %v", err)
-	}
-
-	if !isValid {
-		t.Fatal("验证结果不匹配")
 	}
 }

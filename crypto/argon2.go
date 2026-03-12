@@ -63,11 +63,11 @@ func (a *Argon2Crypto) Encrypt(password string) (string, error) {
 }
 
 // Verify 验证密码
-func (a *Argon2Crypto) Verify(password, encrypted string) (bool, error) {
+func (a *Argon2Crypto) Verify(password, encrypted string) error {
 	// 解析哈希字符串
 	parts := strings.Split(encrypted, "$")
 	if len(parts) != 6 {
-		return false, errors.New("无效的 Argon2 哈希格式")
+		return errors.New("无效的 Argon2 哈希格式")
 	}
 
 	// 解析参数
@@ -76,23 +76,23 @@ func (a *Argon2Crypto) Verify(password, encrypted string) (bool, error) {
 	var parallelism uint8
 	_, err := fmt.Sscanf(parts[2], "v=%d", &version)
 	if err != nil || version != argon2.Version {
-		return false, errors.New("不支持的 Argon2 版本")
+		return errors.New("不支持的 Argon2 版本")
 	}
 
 	_, err = fmt.Sscanf(parts[3], "m=%d,t=%d,p=%d", &memory, &iterations, &parallelism)
 	if err != nil {
-		return false, errors.New("无效的 Argon2 参数")
+		return errors.New("无效的 Argon2 参数")
 	}
 
 	// 解码盐值和哈希
 	salt, err := base64.RawStdEncoding.DecodeString(parts[4])
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	decodedHash, err := base64.RawStdEncoding.DecodeString(parts[5])
 	if err != nil {
-		return false, err
+		return err
 	}
 	keyLength := uint32(len(decodedHash))
 
@@ -107,5 +107,8 @@ func (a *Argon2Crypto) Verify(password, encrypted string) (bool, error) {
 	)
 
 	// 安全比较
-	return subtle.ConstantTimeCompare(newHash, decodedHash) == 1, nil
+	if subtle.ConstantTimeCompare(newHash, decodedHash) != 1 {
+		return errors.New("密码不匹配")
+	}
+	return nil
 }

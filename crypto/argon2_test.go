@@ -20,22 +20,14 @@ func TestArgon2Crypto_EncryptAndVerify(t *testing.T) {
 	t.Log(encrypted)
 
 	// 测试验证成功
-	isValid, err := crypto.Verify(password, encrypted)
+	err = crypto.Verify(password, encrypted)
 	if err != nil {
 		t.Fatalf("验证失败: %v", err)
-	}
-
-	if !isValid {
-		t.Fatal("验证未通过，密码应匹配")
 	}
 
 	// 测试验证失败
-	isValid, err = crypto.Verify("wrongpassword", encrypted)
-	if err != nil {
-		t.Fatalf("验证失败: %v", err)
-	}
-
-	if isValid {
+	err = crypto.Verify("wrongpassword", encrypted)
+	if err == nil {
 		t.Fatal("验证通过，但密码不应匹配")
 	}
 }

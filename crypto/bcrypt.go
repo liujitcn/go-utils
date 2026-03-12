@@ -22,13 +22,13 @@ func (b *BCryptCrypto) Encrypt(password string) (encrypted string, err error) {
 }
 
 // Verify 验证密码是否匹配加密后的字符串
-func (b *BCryptCrypto) Verify(password, encrypted string) (bool, error) {
+func (b *BCryptCrypto) Verify(password, encrypted string) error {
 	err := bcrypt.CompareHashAndPassword([]byte(encrypted), []byte(password))
 	if err != nil {
 		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
-			return false, nil
+			return errors.New("密码不匹配")
 		}
-		return false, err
+		return err
 	}
-	return true, nil
+	return nil
 }

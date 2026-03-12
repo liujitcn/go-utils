@@ -22,22 +22,14 @@ func TestHMACCrypto_EncryptAndVerify(t *testing.T) {
 	t.Log(encrypted)
 
 	// 测试验证
-	isValid, err := crypto.Verify(data, encrypted)
+	err = crypto.Verify(data, encrypted)
 	if err != nil {
 		t.Fatalf("验证失败: %v", err)
-	}
-
-	if !isValid {
-		t.Fatal("验证结果不匹配")
 	}
 
 	// 测试验证失败的情况
-	isValid, err = crypto.Verify("wrongdata", encrypted)
-	if err != nil {
-		t.Fatalf("验证失败: %v", err)
-	}
-
-	if isValid {
+	err = crypto.Verify("wrongdata", encrypted)
+	if err == nil {
 		t.Fatal("验证结果错误，预期验证失败")
 	}
 }

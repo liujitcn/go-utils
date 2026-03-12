@@ -12,7 +12,7 @@ type Crypto interface {
 	Encrypt(plainPassword string) (encrypted string, err error)
 
 	// Verify 验证密码是否匹配
-	Verify(plainPassword, encrypted string) (bool, error)
+	Verify(plainPassword, encrypted string) error
 }
 
 func NewCrypto(algorithm string) (Crypto, error) {
@@ -62,10 +62,10 @@ func Encrypt(plainPassword string) (string, error) {
 }
 
 // Verify 验证加密数据
-func Verify(plainPassword, encrypted string) (bool, error) {
+func Verify(plainPassword, encrypted string) error {
 	newDefaultCrypto()
 	if defaultCryptoErr != nil {
-		return false, defaultCryptoErr
+		return defaultCryptoErr
 	}
 	return defaultCrypto.Verify(plainPassword, encrypted)
 }

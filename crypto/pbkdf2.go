@@ -65,34 +65,34 @@ func (p *PBKDF2Crypto) Encrypt(password string) (string, error) {
 }
 
 // Verify 验证密码
-func (p *PBKDF2Crypto) Verify(password, encrypted string) (bool, error) {
+func (p *PBKDF2Crypto) Verify(password, encrypted string) error {
 	// 解析哈希字符串
 	parts := strings.Split(encrypted, ":")
 	if len(parts) != 5 || parts[0] != "pbkdf2" {
-		return false, errors.New("无效的 PBKDF2 哈希格式")
+		return errors.New("无效的 PBKDF2 哈希格式")
 	}
 
 	// 解析参数
 	hashName := parts[1]
 	iterations, err := strconv.Atoi(parts[2])
 	if err != nil {
-		return false, errors.New("无效的迭代次数")
+		return errors.New("无效的迭代次数")
 	}
 
 	salt, err := base64.RawStdEncoding.DecodeString(parts[3])
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	expectedKey, err := base64.RawStdEncoding.DecodeString(parts[4])
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	// 根据哈希名称选择哈希函数
 	hashFunc, ok := getHashFunction(hashName)
 	if !ok {
-		return false, fmt.Errorf("不支持的哈希算法: %s", hashName)
+		return fmt.Errorf("不支持的哈希算法: %s", hashName)
 	}
 
 	// 生成新密钥
@@ -100,7 +100,10 @@ func (p *PBKDF2Crypto) Verify(password, encrypted string) (bool, error) {
 	newKey := pbkdf2Key([]byte(password), salt, iterations, keyLength, hashFunc)
 
 	// 安全比较
-	return hmac.Equal(newKey, expectedKey), nil
+	if !hmac.Equal(newKey, expectedKey) {
+		return errors.New("密码不匹配")
+	}
+	return nil
 }
 
 // pbkdf2Key 实现 PBKDF2 核心算法

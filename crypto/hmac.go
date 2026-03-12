@@ -36,15 +36,18 @@ func (h *HMACCrypto) Encrypt(data string) (string, error) {
 }
 
 // Verify 验证数据的 HMAC 值是否匹配
-func (h *HMACCrypto) Verify(data, encrypted string) (bool, error) {
+func (h *HMACCrypto) Verify(data, encrypted string) error {
 	if data == "" || encrypted == "" {
-		return false, errors.New("数据或加密字符串不能为空")
+		return errors.New("数据或加密字符串不能为空")
 	}
 
 	expectedHash, err := h.Encrypt(data)
 	if err != nil {
-		return false, err
+		return err
 	}
 
-	return hmac.Equal([]byte(expectedHash), []byte(encrypted)), nil
+	if !hmac.Equal([]byte(expectedHash), []byte(encrypted)) {
+		return errors.New("数据校验不通过")
+	}
+	return nil
 }

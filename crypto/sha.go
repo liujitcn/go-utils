@@ -63,28 +63,28 @@ func (s *SHACrypto) Encrypt(password string) (string, error) {
 }
 
 // Verify 验证密码
-func (s *SHACrypto) Verify(password, encrypted string) (bool, error) {
+func (s *SHACrypto) Verify(password, encrypted string) error {
 	// 解析哈希字符串
 	parts := strings.Split(encrypted, "$")
 	if len(parts) != 3 {
-		return false, errors.New("无效的 SHA 哈希格式")
+		return errors.New("无效的 SHA 哈希格式")
 	}
 
 	hashName := parts[0]
 	if hashName != s.HashName {
-		return false, fmt.Errorf("哈希算法不匹配: 期望 %s, 实际 %s", s.HashName, hashName)
+		return fmt.Errorf("哈希算法不匹配: 期望 %s, 实际 %s", s.HashName, hashName)
 	}
 
 	// 解码盐值
 	salt, err := base64.RawStdEncoding.DecodeString(parts[1])
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	// 解码原始哈希值
 	originalHash, err := hex.DecodeString(parts[2])
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	// 计算新哈希
@@ -94,7 +94,10 @@ func (s *SHACrypto) Verify(password, encrypted string) (bool, error) {
 	newHash := hashValue.Sum(nil)
 
 	// 安全比较
-	return compareHash(newHash, originalHash), nil
+	if !compareHash(newHash, originalHash) {
+		return errors.New("密码不匹配")
+	}
+	return nil
 }
 
 // compareHash 安全比较两个哈希值
