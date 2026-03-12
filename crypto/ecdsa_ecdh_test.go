@@ -21,13 +21,9 @@ func TestECDSACrypto_EncryptAndVerify(t *testing.T) {
 	}
 
 	// 验证签名
-	isValid, err := crypto.Verify(message, encrypted)
+	err = crypto.Verify(message, encrypted)
 	if err != nil {
 		t.Fatalf("验证失败: %v", err)
-	}
-
-	if !isValid {
-		t.Fatal("签名验证未通过")
 	}
 }
 
@@ -61,12 +57,8 @@ func TestECDHCrypto_EncryptAndVerify(t *testing.T) {
 	}
 
 	// 验证共享密钥
-	isValid, err := crypto2.Verify(base64.StdEncoding.EncodeToString(secret2), encrypted)
+	err = crypto2.Verify(base64.StdEncoding.EncodeToString(secret2), encrypted)
 	if err != nil {
 		t.Fatalf("验证失败: %v", err)
-	}
-
-	if !isValid {
-		t.Fatal("共享密钥验证未通过")
 	}
 }
