@@ -19,8 +19,7 @@ func UnixMilliToStringPtr(tm *int64) *string {
 	if tm == nil {
 		return nil
 	}
-	str := time.UnixMilli(*tm).Format(Layout)
-	return &str
+	return new(time.UnixMilli(*tm).Format(Layout))
 }
 
 // StringToUnixMilliInt64Ptr 字符串 -> 毫秒时间戳
@@ -117,8 +116,7 @@ func TimeToDateString(tm time.Time) string {
 // TimestamppbToTime timestamppb.Timestamp -> time.Time
 func TimestamppbToTime(tm *timestamppb.Timestamp) *time.Time {
 	if tm != nil {
-		t := trans.Ptr(tm.AsTime())
-		return &t
+		return new(trans.Ptr(tm.AsTime()))
 	}
 	return nil
 }

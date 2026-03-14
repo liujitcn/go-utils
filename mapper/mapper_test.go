@@ -68,26 +68,22 @@ func TestEnumTypeConverter(t *testing.T) {
 	converter := NewEnumTypeConverter[DtoType, EntityType](nameMap, valueMap)
 
 	// 测试 ToEntity 方法
-	dto := DtoTypeOne
-	entity := converter.ToEntity(&dto)
+	entity := converter.ToEntity(new(DtoTypeOne))
 	assert.NotNil(t, entity)
 	assert.Equal(t, "One", string(*entity))
 
 	// 测试 ToEntity 方法，传入不存在的值
-	dtoInvalid := DtoType(3)
-	entityInvalid := converter.ToEntity(&dtoInvalid)
+	entityInvalid := converter.ToEntity(new(DtoType(3)))
 	assert.Nil(t, entityInvalid)
 
 	// 测试 ToDTO 方法
-	tmpEntityTwo := EntityTypeTwo
-	entity = &tmpEntityTwo
+	entity = new(EntityTypeTwo)
 	dtoResult := converter.ToDTO(entity)
 	assert.NotNil(t, dtoResult)
 	assert.Equal(t, DtoType(2), *dtoResult)
 
 	// 测试 ToDTO 方法，传入不存在的值
-	tmpEntityThree := EntityType("Three")
-	entityInvalid = &tmpEntityThree
+	entityInvalid = new(EntityType("Three"))
 	dtoInvalidResult := converter.ToDTO(entityInvalid)
 	assert.Nil(t, dtoInvalidResult)
 }

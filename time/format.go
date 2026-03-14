@@ -63,6 +63,5 @@ func DurationpbSecond(duration *durationpb.Duration) *float64 {
 		return nil
 	}
 	seconds := duration.AsDuration().Seconds()
-	secondsInt64 := seconds
-	return &secondsInt64
+	return new(seconds)
 }

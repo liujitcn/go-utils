@@ -29,8 +29,7 @@ func (m *EnumTypeConverter[DTO, ENTITY]) ToEntity(dto *DTO) *ENTITY {
 		return nil
 	}
 
-	entity := ENTITY(find)
-	return &entity
+	return new(ENTITY(find))
 }
 
 func (m *EnumTypeConverter[DTO, ENTITY]) ToDTO(entity *ENTITY) *DTO {
@@ -43,18 +42,14 @@ func (m *EnumTypeConverter[DTO, ENTITY]) ToDTO(entity *ENTITY) *DTO {
 		return nil
 	}
 
-	dto := DTO(find)
-	return &dto
+	return new(DTO(find))
 }
 
 func (m *EnumTypeConverter[DTO, ENTITY]) NewConverterPair() []copier.TypeConverter {
-	srcType := ENTITY("")
-	dstType := DTO(0)
-
 	fromFn := m.ToDTO
 	toFn := m.ToEntity
 
-	return NewGenericTypeConverterPair(&srcType, &dstType, fromFn, toFn)
+	return NewGenericTypeConverterPair(new(ENTITY("")), new(DTO(0)), fromFn, toFn)
 }
 
 func NewGenericTypeConverterPair[A interface{}, B interface{}](
