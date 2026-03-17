@@ -14,6 +14,7 @@ go get github.com/liujitcn/go-utils@latest
 - `github.com/liujitcn/go-utils/byte`：`int` 与 `[]byte` 转换、ASCII 大小写字节转换
 - `github.com/liujitcn/go-utils/crypto`：密码学工具（独立子模块）
 - `github.com/liujitcn/go-utils/geoip`：IP 地理位置查询（GeoLite2 / 纯真 / IP2Region）
+- `github.com/liujitcn/go-utils/http`：基于 options 模式的通用 HTTP 请求客户端
 - `github.com/liujitcn/go-utils/id`：Snowflake、UUIDv4/v7、XID
 - `github.com/liujitcn/go-utils/io`：文件读取、路径匹配、文件属性判断
 - `github.com/liujitcn/go-utils/jwt`：JWT 生成/解析/校验（独立子模块）
@@ -79,6 +80,68 @@ import (
 func main() {
 	start, end := timeutil.GetTodayRangeTimeString()
 	fmt.Println(start, end)
+}
+```
+
+### `http`
+
+```go
+package main
+
+import (
+	"fmt"
+
+	httputil "github.com/liujitcn/go-utils/http"
+)
+
+func main() {
+	type PingResponse struct {
+		Message string `json:"message"`
+	}
+
+	var result PingResponse
+
+	client := httputil.NewClient(
+		httputil.WithBaseURL("https://example.com"),
+		httputil.WithDefaultHeader("X-App", "shop"),
+	)
+
+	err := client.Get("/ping", &result, httputil.WithQuery("lang", "zh-CN"))
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(result.Message)
+}
+```
+
+也可以使用包级单例静态方法：
+
+```go
+package main
+
+import (
+	"fmt"
+
+	httputil "github.com/liujitcn/go-utils/http"
+)
+
+func main() {
+	type PingResponse struct {
+		Message string `json:"message"`
+	}
+
+	var result PingResponse
+
+	httputil.Init(
+		httputil.WithBaseURL("https://example.com"),
+		httputil.WithDefaultHeader("X-App", "shop"),
+	)
+
+	err := httputil.Get("/ping", &result, httputil.WithQuery("lang", "zh-CN"))
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(result.Message)
 }
 ```
 
