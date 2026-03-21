@@ -38,8 +38,7 @@ func (m *JSONTypeConverter[T]) ToDTO(entity *T) *string {
 	if err != nil {
 		return nil
 	}
-	value := string(data)
-	return &value
+	return new(string(data))
 }
 
 // NewConverterPair 创建 JSON 字符串与对象的双向转换器

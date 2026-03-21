@@ -5,6 +5,7 @@ go 1.26.0
 require (
 	github.com/gobwas/glob v0.2.3
 	github.com/google/uuid v1.6.0
+	github.com/jinzhu/copier v0.4.0
 	github.com/lithammer/shortuuid/v4 v4.2.0
 	github.com/rs/xid v1.6.0
 	github.com/stretchr/testify v1.11.1

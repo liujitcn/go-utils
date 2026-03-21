@@ -208,6 +208,15 @@ func main() {
 }
 ```
 
+如需显式复用时间转换器，也可单独追加：
+
+```go
+func main() {
+	m := mapper.NewCopierMapper[UserDTO, UserEntity]()
+	m.AppendConverters(mapper.NewTimeTypeConverter().NewConverterPair())
+}
+```
+
 如需处理 JSON 字符串与对象互转，可按需追加转换器：
 
 ```go
@@ -226,6 +235,26 @@ type UserEntity struct {
 func main() {
 	m := mapper.NewCopierMapper[UserDTO, UserEntity]()
 	m.AppendConverters(mapper.NewJSONTypeConverter[Profile]().NewConverterPair())
+}
+```
+
+如需处理 JSON 字符串与数组互转，也可直接追加内置数组转换器：
+
+```go
+type UserDTO struct {
+	RoleIDs string
+	Tags    string
+}
+
+type UserEntity struct {
+	RoleIDs []int64
+	Tags    []string
+}
+
+func main() {
+	m := mapper.NewCopierMapper[UserDTO, UserEntity]()
+	m.AppendConverters(mapper.NewInt64ArrayTypeConverter().NewConverterPair())
+	m.AppendConverters(mapper.NewStringArrayTypeConverter().NewConverterPair())
 }
 ```
 

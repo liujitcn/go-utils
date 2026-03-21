@@ -134,3 +134,87 @@ func TestJSONTypeConverter(t *testing.T) {
 	entityInvalid := converter.ToEntity(&invalidJSON)
 	assert.Nil(t, entityInvalid)
 }
+
+func TestTimeTypeConverter(t *testing.T) {
+	converter := NewTimeTypeConverter()
+	now := time.Date(2024, 1, 2, 3, 4, 5, 0, time.Local)
+
+	dto := converter.ToDTO(&now)
+	assert.NotNil(t, dto)
+	assert.NotEmpty(t, *dto)
+
+	entity := converter.ToEntity(dto)
+	assert.NotNil(t, entity)
+	assert.Equal(t, now.Unix(), entity.Unix())
+
+	invalidValue := "invalid"
+	entityInvalid := converter.ToEntity(&invalidValue)
+	assert.Nil(t, entityInvalid)
+}
+
+func TestInt64ArrayTypeConverter(t *testing.T) {
+	converter := NewInt64ArrayTypeConverter()
+	value := `[1,2,3]`
+
+	entity := converter.ToEntity(&value)
+	assert.NotNil(t, entity)
+	assert.Equal(t, []int64{1, 2, 3}, *entity)
+
+	dto := converter.ToDTO(entity)
+	assert.NotNil(t, dto)
+	assert.JSONEq(t, value, *dto)
+
+	emptyJSON := ""
+	entityEmpty := converter.ToEntity(&emptyJSON)
+	assert.NotNil(t, entityEmpty)
+	assert.Empty(t, *entityEmpty)
+}
+
+func TestStringArrayTypeConverter(t *testing.T) {
+	converter := NewStringArrayTypeConverter()
+	value := `["a","b","c"]`
+
+	entity := converter.ToEntity(&value)
+	assert.NotNil(t, entity)
+	assert.Equal(t, []string{"a", "b", "c"}, *entity)
+
+	dto := converter.ToDTO(entity)
+	assert.NotNil(t, dto)
+	assert.JSONEq(t, value, *dto)
+
+	emptyJSON := ""
+	entityEmpty := converter.ToEntity(&emptyJSON)
+	assert.NotNil(t, entityEmpty)
+	assert.Empty(t, *entityEmpty)
+}
+
+func TestCopierMapper_ArrayConverter(t *testing.T) {
+	type DtoType struct {
+		RoleIDs string
+		Tags    string
+	}
+
+	type EntityType struct {
+		RoleIDs []int64
+		Tags    []string
+	}
+
+	mapper := NewCopierMapper[DtoType, EntityType]()
+	mapper.AppendConverters(NewInt64ArrayTypeConverter().NewConverterPair())
+	mapper.AppendConverters(NewStringArrayTypeConverter().NewConverterPair())
+
+	entity := &EntityType{
+		RoleIDs: []int64{1, 2, 3},
+		Tags:    []string{"a", "b"},
+	}
+
+	dto := mapper.ToDTO(entity)
+	assert.NotNil(t, dto)
+	assert.JSONEq(t, `[1,2,3]`, dto.RoleIDs)
+	assert.JSONEq(t, `["a","b"]`, dto.Tags)
+
+	entityResult := mapper.ToEntity(dto)
+	assert.NotNil(t, entityResult)
+	assert.Equal(t, entity.RoleIDs, entityResult.RoleIDs)
+	assert.Equal(t, entity.Tags, entityResult.Tags)
+}

@@ -1,10 +1,7 @@
 package mapper
 
 import (
-	"time"
-
 	"github.com/jinzhu/copier"
-	_time "github.com/liujitcn/go-utils/time"
 )
 
 // Mapper defines the interface for converting between Data Transfer Objects (DTOs) and Database Entities.
@@ -20,26 +17,15 @@ type CopierMapper[DTO any, ENTITY any] struct {
 	copierOption copier.Option
 }
 
+// NewCopierMapper 创建带默认转换器的映射器。
 func NewCopierMapper[DTO any, ENTITY any]() *CopierMapper[DTO, ENTITY] {
 	mapper := &CopierMapper[DTO, ENTITY]{
 		copierOption: copier.Option{
 			Converters: []copier.TypeConverter{},
 		},
 	}
-	mapper.AppendConverters(NewGenericTypeConverterPair(
-		time.Time{},
-		"",
-		func(src time.Time) string {
-			return _time.TimeToTimeString(src)
-		},
-		func(src string) time.Time {
-			timeValue := _time.StringTimeToTime(src)
-			if timeValue == nil {
-				return time.Time{}
-			}
-			return *timeValue
-		},
-	))
+	// 默认注册时间类型转换器，统一时间字段的双向复制行为。
+	mapper.AppendConverters(NewTimeTypeConverter().NewConverterPair())
 	return mapper
 }
 
