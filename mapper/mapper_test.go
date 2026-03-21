@@ -111,3 +111,26 @@ func TestCopierMapper_TimeConverter(t *testing.T) {
 	assert.NotNil(t, entityResult)
 	assert.False(t, entityResult.CreatedAt.IsZero())
 }
+
+func TestJSONTypeConverter(t *testing.T) {
+	type Profile struct {
+		Name string `json:"name"`
+		Age  int    `json:"age"`
+	}
+
+	converter := NewJSONTypeConverter[Profile]()
+
+	jsonValue := `{"name":"alice","age":18}`
+	entity := converter.ToEntity(&jsonValue)
+	assert.NotNil(t, entity)
+	assert.Equal(t, "alice", entity.Name)
+	assert.Equal(t, 18, entity.Age)
+
+	dto := converter.ToDTO(entity)
+	assert.NotNil(t, dto)
+	assert.JSONEq(t, jsonValue, *dto)
+
+	invalidJSON := "{"
+	entityInvalid := converter.ToEntity(&invalidJSON)
+	assert.Nil(t, entityInvalid)
+}

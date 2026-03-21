@@ -4,9 +4,8 @@ import (
 	"time"
 
 	"github.com/jinzhu/copier"
+	_time "github.com/liujitcn/go-utils/time"
 )
-
-const defaultTimeFormat = "2006-01-02 15:04:05"
 
 // Mapper defines the interface for converting between Data Transfer Objects (DTOs) and Database Entities.
 type Mapper[DTO any, ENTITY any] interface {
@@ -31,14 +30,14 @@ func NewCopierMapper[DTO any, ENTITY any]() *CopierMapper[DTO, ENTITY] {
 		time.Time{},
 		"",
 		func(src time.Time) string {
-			return src.Format(defaultTimeFormat)
+			return _time.TimeToTimeString(src)
 		},
 		func(src string) time.Time {
-			timeValue, err := time.ParseInLocation(defaultTimeFormat, src, time.Local)
-			if err != nil {
+			timeValue := _time.StringTimeToTime(src)
+			if timeValue == nil {
 				return time.Time{}
 			}
-			return timeValue
+			return *timeValue
 		},
 	))
 	return mapper

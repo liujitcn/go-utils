@@ -19,7 +19,7 @@ go get github.com/liujitcn/go-utils@latest
 - `github.com/liujitcn/go-utils/io`：文件读取、路径匹配、文件属性判断
 - `github.com/liujitcn/go-utils/jwt`：JWT 生成/解析/校验（独立子模块）
 - `github.com/liujitcn/go-utils/map`：泛型 map 工具
-- `github.com/liujitcn/go-utils/mapper`：DTO 与实体互转，默认内置 `time.Time <-> string` 转换
+- `github.com/liujitcn/go-utils/mapper`：DTO 与实体互转，默认复用 `time` 包内置 `time.Time <-> string` 转换
 - `github.com/liujitcn/go-utils/slice`：泛型 slice 工具
 - `github.com/liujitcn/go-utils/string`：字符串与 JSON 数组转换、脱敏、随机数字串
 - `github.com/liujitcn/go-utils/stringcase`：大小驼峰、蛇形、短横线等命名转换
@@ -205,6 +205,27 @@ func main() {
 	m := mapper.NewCopierMapper[UserDTO, UserEntity]()
 	dto := m.ToDTO(&UserEntity{CreatedAt: time.Now()})
 	fmt.Println(dto.CreatedAt)
+}
+```
+
+如需处理 JSON 字符串与对象互转，可按需追加转换器：
+
+```go
+type Profile struct {
+	Name string `json:"name"`
+}
+
+type UserDTO struct {
+	Profile string
+}
+
+type UserEntity struct {
+	Profile Profile
+}
+
+func main() {
+	m := mapper.NewCopierMapper[UserDTO, UserEntity]()
+	m.AppendConverters(mapper.NewJSONTypeConverter[Profile]().NewConverterPair())
 }
 ```
 
