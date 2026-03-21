@@ -2,6 +2,7 @@ package mapper
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -86,4 +87,27 @@ func TestEnumTypeConverter(t *testing.T) {
 	entityInvalid = new(EntityType("Three"))
 	dtoInvalidResult := converter.ToDTO(entityInvalid)
 	assert.Nil(t, dtoInvalidResult)
+}
+
+func TestCopierMapper_TimeConverter(t *testing.T) {
+	type DtoType struct {
+		CreatedAt string
+	}
+
+	type EntityType struct {
+		CreatedAt time.Time
+	}
+
+	mapper := NewCopierMapper[DtoType, EntityType]()
+	entity := &EntityType{
+		CreatedAt: time.Date(2024, 1, 2, 3, 4, 5, 0, time.Local),
+	}
+
+	dto := mapper.ToDTO(entity)
+	assert.NotNil(t, dto)
+	assert.NotEmpty(t, dto.CreatedAt)
+
+	entityResult := mapper.ToEntity(dto)
+	assert.NotNil(t, entityResult)
+	assert.False(t, entityResult.CreatedAt.IsZero())
 }

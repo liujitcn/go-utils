@@ -19,6 +19,7 @@ go get github.com/liujitcn/go-utils@latest
 - `github.com/liujitcn/go-utils/io`：文件读取、路径匹配、文件属性判断
 - `github.com/liujitcn/go-utils/jwt`：JWT 生成/解析/校验（独立子模块）
 - `github.com/liujitcn/go-utils/map`：泛型 map 工具
+- `github.com/liujitcn/go-utils/mapper`：DTO 与实体互转，默认内置 `time.Time <-> string` 转换
 - `github.com/liujitcn/go-utils/slice`：泛型 slice 工具
 - `github.com/liujitcn/go-utils/string`：字符串与 JSON 数组转换、脱敏、随机数字串
 - `github.com/liujitcn/go-utils/stringcase`：大小驼峰、蛇形、短横线等命名转换
@@ -177,6 +178,33 @@ import (
 func main() {
 	m := map[string]int{"a": 1, "b": 2}
 	fmt.Println(_map.Keys(m))
+}
+```
+
+### `mapper`
+
+```go
+package main
+
+import (
+	"fmt"
+	"time"
+
+	"github.com/liujitcn/go-utils/mapper"
+)
+
+type UserDTO struct {
+	CreatedAt string
+}
+
+type UserEntity struct {
+	CreatedAt time.Time
+}
+
+func main() {
+	m := mapper.NewCopierMapper[UserDTO, UserEntity]()
+	dto := m.ToDTO(&UserEntity{CreatedAt: time.Now()})
+	fmt.Println(dto.CreatedAt)
 }
 ```
 
