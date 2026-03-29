@@ -26,6 +26,17 @@ func NewCopierMapper[DTO any, ENTITY any]() *CopierMapper[DTO, ENTITY] {
 	}
 	// 默认注册时间类型转换器，统一时间字段的双向复制行为。
 	mapper.AppendConverters(NewTimeTypeConverter().NewConverterPair())
+	// 默认注册基本类型的JSON转换
+	mapper.AppendConverters(NewJSONTypeConverter[[]float64]().NewConverterPair())
+	mapper.AppendConverters(NewJSONTypeConverter[[]float32]().NewConverterPair())
+	mapper.AppendConverters(NewJSONTypeConverter[[]uint64]().NewConverterPair())
+	mapper.AppendConverters(NewJSONTypeConverter[[]uint32]().NewConverterPair())
+	mapper.AppendConverters(NewJSONTypeConverter[[]int32]().NewConverterPair())
+	mapper.AppendConverters(NewJSONTypeConverter[[]int32]().NewConverterPair())
+	mapper.AppendConverters(NewJSONTypeConverter[[]bool]().NewConverterPair())
+	mapper.AppendConverters(NewJSONTypeConverter[[]string]().NewConverterPair())
+	mapper.AppendConverters(NewJSONTypeConverter[[][]byte]().NewConverterPair())
+
 	return mapper
 }
 
