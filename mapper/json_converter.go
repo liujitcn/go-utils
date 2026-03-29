@@ -43,8 +43,22 @@ func (m *JSONTypeConverter[T]) ToDTO(entity *T) *string {
 
 // NewConverterPair 创建 JSON 字符串与对象的双向转换器
 func (m *JSONTypeConverter[T]) NewConverterPair() []copier.TypeConverter {
-	fromFn := m.ToDTO
-	toFn := m.ToEntity
+	fromFn := func(src T) string {
+		value := m.ToDTO(&src)
+		if value == nil {
+			return ""
+		}
+		return *value
+	}
+	toFn := func(src string) T {
+		value := m.ToEntity(&src)
+		if value == nil {
+			var zero T
+			return zero
+		}
+		return *value
+	}
 
-	return NewGenericTypeConverterPair(new(T), new(string), fromFn, toFn)
+	var zero T
+	return NewGenericTypeConverterPair(zero, "", fromFn, toFn)
 }
