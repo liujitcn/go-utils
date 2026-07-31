@@ -356,6 +356,8 @@ func main() {
 
 仓库根目录已提交 `go.work`，用于把根模块及 `crypto`、`geoip`、`http`、`jwt` 独立子模块纳入同一个本地工作区。
 
+仓库统一忽略 macOS、Linux 和 Windows 开发环境产生的常见本地文件，避免无关文件进入版本控制。
+
 在仓库根目录执行根模块测试：
 
 ```bash
