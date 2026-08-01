@@ -27,6 +27,7 @@ go get github.com/liujitcn/go-utils@latest
 - `github.com/liujitcn/go-utils/time`：时间格式化、区间、差值、protobuf 时间转换
 - `github.com/liujitcn/go-utils/tls`：TLS 配置加载（文件/内存）
 - `github.com/liujitcn/go-utils/trans`：值与指针/切片互转、Map Key/Value 提取
+- `github.com/liujitcn/go-utils/translator`：统一文本翻译接口，以及 Alibaba、Baidu、Google、Volc 独立 Provider
 
 ## 快速示例
 
@@ -165,6 +166,34 @@ func main() {
 	arr := []int{1, 2, 3, 4}
 	evens := slice.Filter(arr, func(v, _ int, _ []int) bool { return v%2 == 0 })
 	fmt.Println(evens) // [2 4]
+}
+```
+
+### `translator`
+
+翻译能力按厂商拆分为独立模块。以下示例使用阿里云 Provider：
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/liujitcn/go-utils/translator/alibaba"
+)
+
+func main() {
+	client, err := alibaba.NewTranslator("access-key-id", "access-key-secret")
+	if err != nil {
+		panic(err)
+	}
+
+	result, err := client.Translate(context.Background(), "Hello", "en", "zh")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(result)
 }
 ```
 
@@ -350,11 +379,12 @@ func main() {
 - `crypto`：见 [crypto/README.md](crypto/README.md)
 - `geoip`：见 [geoip/README.md](geoip/README.md)
 - `stringcase`：见 [stringcase/README.md](stringcase/README.md)
+- `translator`：见 [translator/README.md](translator/README.md)
 - ECDH 使用建议：先通过 `Encrypt` 交换公钥，再用 `DeriveSharedSecret` 生成共享密钥；`Verify` 的第一个参数需传共享密钥的 Base64 字符串。
 
 ## 测试
 
-仓库根目录已提交 `go.work`，用于把根模块及 `crypto`、`geoip`、`http`、`jwt` 独立子模块纳入同一个本地工作区。
+仓库根目录已提交 `go.work`，用于把根模块及 `crypto`、`geoip`、`http`、`jwt`、`translator` 和各翻译 Provider 独立子模块纳入同一个本地工作区。
 
 仓库统一忽略 macOS、Linux 和 Windows 开发环境产生的常见本地文件，避免无关文件进入版本控制。
 
@@ -371,6 +401,11 @@ cd crypto && go test ./...
 cd http && go test ./...
 cd jwt && go test ./...
 cd geoip && go test ./...
+cd translator && go test ./...
+cd translator/alibaba && go test ./...
+cd translator/baidu && go test ./...
+cd translator/google && go test ./...
+cd translator/volc && go test ./...
 ```
 
 ## 打 Tag

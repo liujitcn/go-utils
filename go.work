@@ -6,4 +6,9 @@ use (
 	./geoip
 	./http
 	./jwt
+	./translator
+	./translator/alibaba
+	./translator/baidu
+	./translator/google
+	./translator/volc
 )
