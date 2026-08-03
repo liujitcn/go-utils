@@ -6,9 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
-	"net/url"
 	"strings"
 	"sync"
 	"time"
@@ -17,6 +15,7 @@ import (
 	translateV3 "cloud.google.com/go/translate/apiv3"
 	"cloud.google.com/go/translate/apiv3/translatepb"
 	"github.com/googleapis/gax-go/v2"
+	httputil "github.com/liujitcn/go-utils/http"
 	"golang.org/x/text/language"
 	"google.golang.org/api/option"
 )
@@ -103,45 +102,30 @@ func (translator *Translator) TranslateV1(
 		return "", fmt.Errorf("Google V1 translate: source cannot be empty")
 	}
 
-	query := url.Values{}
-	query.Set("client", "gtx")
-	query.Set("sl", sourceLang)
-	query.Set("tl", targetLang)
-	query.Set("dt", "t")
-	query.Set("q", source)
-
-	var request *http.Request
-	request, err = http.NewRequestWithContext(
-		ctx,
+	client := httputil.NewClient(httputil.WithHTTPClient(translator.options.httpClient))
+	var response *httputil.Response
+	response, err = client.Do(
 		http.MethodGet,
-		translator.options.v1Endpoint+"?"+query.Encode(),
-		nil,
+		translator.options.v1Endpoint,
+		httputil.WithContext(ctx),
+		httputil.WithQuery("client", "gtx"),
+		httputil.WithQuery("sl", sourceLang),
+		httputil.WithQuery("tl", targetLang),
+		httputil.WithQuery("dt", "t"),
+		httputil.WithQuery("q", source),
 	)
-	if err != nil {
-		return "", fmt.Errorf("Google V1 translate: create request: %w", err)
-	}
-
-	var response *http.Response
-	response, err = translator.options.httpClient.Do(request)
 	if err != nil {
 		return "", fmt.Errorf("Google V1 translate: send request: %w", err)
 	}
-
-	var responseBody []byte
-	responseBody, err = io.ReadAll(io.LimitReader(response.Body, maxResponseSize))
-	closeErr := response.Body.Close()
-	if err != nil {
-		return "", fmt.Errorf("Google V1 translate: read response: %w", err)
-	}
-	if closeErr != nil {
-		return "", fmt.Errorf("Google V1 translate: close response: %w", closeErr)
+	if len(response.Body) > maxResponseSize {
+		return "", fmt.Errorf("Google V1 translate: response exceeds %d bytes", maxResponseSize)
 	}
 	if response.StatusCode != http.StatusOK {
 		return "", fmt.Errorf("Google V1 translate: HTTP status %d", response.StatusCode)
 	}
 
 	var translated string
-	translated, err = decodeV1Response(responseBody)
+	translated, err = decodeV1Response(response.Body)
 	if err != nil {
 		return "", fmt.Errorf("Google V1 translate: %w", err)
 	}

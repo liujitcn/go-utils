@@ -8,11 +8,12 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
+
+	httputil "github.com/liujitcn/go-utils/http"
 )
 
 const (
@@ -82,39 +83,26 @@ func (translator *Translator) Translate(
 	form.Set("salt", salt)
 	form.Set("sign", translator.generateSign(source, salt))
 
-	var request *http.Request
-	request, err = http.NewRequestWithContext(
-		ctx,
+	client := httputil.NewClient(httputil.WithHTTPClient(translator.client))
+	var response *httputil.Response
+	response, err = client.Do(
 		http.MethodPost,
 		translator.endpoint,
-		strings.NewReader(form.Encode()),
+		httputil.WithContext(ctx),
+		httputil.WithFormBody(form),
 	)
-	if err != nil {
-		return "", fmt.Errorf("Baidu translate: create request: %w", err)
-	}
-	request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-
-	var response *http.Response
-	response, err = translator.client.Do(request)
 	if err != nil {
 		return "", fmt.Errorf("Baidu translate: send request: %w", err)
 	}
-
-	var responseBody []byte
-	responseBody, err = io.ReadAll(io.LimitReader(response.Body, maxResponseSize))
-	closeErr := response.Body.Close()
-	if err != nil {
-		return "", fmt.Errorf("Baidu translate: read response: %w", err)
-	}
-	if closeErr != nil {
-		return "", fmt.Errorf("Baidu translate: close response: %w", closeErr)
+	if len(response.Body) > maxResponseSize {
+		return "", fmt.Errorf("Baidu translate: response exceeds %d bytes", maxResponseSize)
 	}
 	if response.StatusCode != http.StatusOK {
 		return "", fmt.Errorf("Baidu translate: HTTP status %d", response.StatusCode)
 	}
 
 	var result baiduResponse
-	err = json.Unmarshal(responseBody, &result)
+	err = json.Unmarshal(response.Body, &result)
 	if err != nil {
 		return "", fmt.Errorf("Baidu translate: decode response: %w", err)
 	}
