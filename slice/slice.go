@@ -1,9 +1,12 @@
 package slice
 
-import (
-	"github.com/liujitcn/go-utils/set"
-	"golang.org/x/exp/constraints"
-)
+import "github.com/liujitcn/go-utils/set"
+
+type number interface {
+	~int | ~int8 | ~int16 | ~int32 | ~int64 |
+		~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 | ~uintptr |
+		~float32 | ~float64 | ~complex64 | ~complex128
+}
 
 // Filter 按条件过滤切片元素。
 func Filter[T any](slice []T, predicate func(value T, index int, slice []T) bool) (filtered []T) {
@@ -62,16 +65,6 @@ func FindIndex[T any](slice []T, predicate func(value T, index int, slice []T) b
 	return -1
 }
 
-// FindIndexOf 查找指定值首次出现的索引。
-func FindIndexOf[T comparable](slice []T, value T) int {
-	for i, el := range slice {
-		if el == value {
-			return i
-		}
-	}
-	return -1
-}
-
 // FindLastIndex 从后向前查找第一个满足条件元素的索引。
 func FindLastIndex[T any](slice []T, predicate func(value T, index int, slice []T) bool) int {
 	for i := len(slice) - 1; i >= 0; i-- {
@@ -116,16 +109,6 @@ func FindIndexesOf[T comparable](slice []T, value T) []int {
 	return indexes
 }
 
-// Includes 判断切片是否包含指定值。
-func Includes[T comparable](slice []T, value T) bool {
-	for _, el := range slice {
-		if el == value {
-			return true
-		}
-	}
-	return false
-}
-
 // Some 判断切片中是否至少有一个元素满足条件。
 func Some[T any](slice []T, predicate func(value T, index int, slice []T) bool) bool {
 	for i, el := range slice {
@@ -146,64 +129,12 @@ func Every[T any](slice []T, predicate func(value T, index int, slice []T) bool)
 	return true
 }
 
-// Merge 合并多个切片。
-func Merge[T any](slices ...[]T) (mergedSlice []T) {
-	if len(slices) > 0 {
-		mergedSliceCap := 0
-
-		for _, slice := range slices {
-			mergedSliceCap += len(slice)
-		}
-
-		if mergedSliceCap > 0 {
-			mergedSlice = make([]T, 0, mergedSliceCap)
-
-			for _, slice := range slices {
-				mergedSlice = append(mergedSlice, slice...)
-			}
-		}
-	}
-	return mergedSlice
-}
-
 // Sum 计算切片元素之和。
-func Sum[T constraints.Complex | constraints.Integer | constraints.Float](slice []T) (result T) {
+func Sum[T number](slice []T) (result T) {
 	for _, el := range slice {
 		result += el
 	}
 	return result
-}
-
-// Remove 删除指定下标的元素并返回新切片。
-func Remove[T any](slice []T, i int) []T {
-	if len(slice) == 0 || i > len(slice)-1 {
-		return slice
-	}
-	copied := Copy(slice)
-	if i == 0 {
-		return copied[1:]
-	}
-	if i != len(copied)-1 {
-		return append(copied[:i], copied[i+1:]...)
-	}
-	return copied[:i]
-}
-
-// Insert 在指定下标插入元素。
-func Insert[T any](slice []T, i int, value T) []T {
-	if len(slice) == i {
-		return append(slice, value)
-	}
-	slice = append(slice[:i+1], slice[i:]...)
-	slice[i] = value
-	return slice
-}
-
-// Copy 复制切片。
-func Copy[T any](slice []T) []T {
-	duplicate := make([]T, len(slice), cap(slice))
-	copy(duplicate, slice)
-	return duplicate
 }
 
 // Intersection 计算多个切片的交集。
@@ -275,19 +206,6 @@ func Union[T comparable](slices ...[]T) []T {
 	return unioned
 }
 
-// Reverse 反转切片元素顺序。
-func Reverse[T any](slice []T) []T {
-	if len(slice) == 0 {
-		return slice
-	}
-
-	result := make([]T, len(slice))
-	for i, value := range slice {
-		result[len(slice)-1-i] = value
-	}
-	return result
-}
-
 // Unique 对切片元素去重并保持首次出现顺序。
 func Unique[T comparable](slice []T) []T {
 	unique := make([]T, 0, len(slice))
@@ -299,24 +217,6 @@ func Unique[T comparable](slice []T) []T {
 		}
 	}
 	return unique
-}
-
-// Chunk 按指定大小拆分切片。
-func Chunk[T any](input []T, size int) [][]T {
-	if size <= 0 {
-		return nil
-	}
-
-	var chunks [][]T
-
-	for i := 0; i < len(input); i += size {
-		end := i + size
-		if end > len(input) {
-			end = len(input)
-		}
-		chunks = append(chunks, input[i:end])
-	}
-	return chunks
 }
 
 // Pluck 从对象切片中提取指定字段值。

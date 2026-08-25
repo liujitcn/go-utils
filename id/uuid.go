@@ -1,10 +1,10 @@
 package id
 
 import (
+	"encoding/base64"
 	"encoding/hex"
+	"uuid"
 
-	"github.com/google/uuid"
-	"github.com/lithammer/shortuuid/v4"
 	"github.com/rs/xid"
 )
 
@@ -21,39 +21,28 @@ func formatUUID(u uuid.UUID, withHyphen bool) string {
 
 // NewGUIDv4 生成带连字符的 UUID v4。
 func NewGUIDv4() string {
-	return formatUUID(uuid.New(), true)
+	return formatUUID(uuid.NewV4(), true)
 }
 
 // NewGUIDv4NoHyphen 生成不带连字符的 UUID v4。
 func NewGUIDv4NoHyphen() string {
-	return formatUUID(uuid.New(), false)
+	return formatUUID(uuid.NewV4(), false)
 }
 
 // NewGUIDv7 生成带连字符的 UUID v7。
 func NewGUIDv7() string {
-	u, err := uuid.NewV7()
-	if err != nil {
-		// 系统时钟异常时回退到 v4，避免返回空值
-		return NewGUIDv4()
-	}
-
-	return formatUUID(u, true)
+	return formatUUID(uuid.NewV7(), true)
 }
 
 // NewGUIDv7NoHyphen 生成不带连字符的 UUID v7。
 func NewGUIDv7NoHyphen() string {
-	u, err := uuid.NewV7()
-	if err != nil {
-		// 系统时钟异常时回退到 v4，避免返回空值
-		return NewGUIDv4NoHyphen()
-	}
-
-	return formatUUID(u, false)
+	return formatUUID(uuid.NewV7(), false)
 }
 
 // NewShortUUID 生成短格式 UUID。
 func NewShortUUID() string {
-	return shortuuid.New()
+	u := uuid.NewV4()
+	return base64.RawURLEncoding.EncodeToString(u[:])
 }
 
 // NewXID 生成 XID。

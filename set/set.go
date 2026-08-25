@@ -4,6 +4,7 @@ package set
 import (
 	"encoding/json"
 	"errors"
+	"maps"
 )
 
 // Set 表示一组不重复的可比较元素，覆盖 golang-set/v2 v2.7.0 接口并保留本仓库既有便捷方法。
@@ -117,7 +118,7 @@ func NewThreadUnsafeSetWithSize[T comparable](size int) Set[T] {
 // NewThreadUnsafeSetFromMapKeys 根据 map 的键创建非线程安全集合。
 func NewThreadUnsafeSetFromMapKeys[T comparable, V any](values map[T]V) Set[T] {
 	collection := newThreadUnsafeSetWithSize[T](len(values))
-	for value := range values {
+	for value := range maps.Keys(values) {
 		collection.Add(value)
 	}
 	return collection

@@ -1,6 +1,6 @@
 module github.com/liujitcn/go-utils/translator/google
 
-go 1.26.0
+go 1.27.0
 
 require (
 	cloud.google.com/go/translate v1.12.7
@@ -42,3 +42,6 @@ require (
 	google.golang.org/grpc v1.81.0 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 )
+
+// Go 1.27 默认启用 x/net/http2 的标准库包装实现，旧版 gRPC 仍依赖旧实现中的 TrailerPrefix。
+replace golang.org/x/net => golang.org/x/net v0.53.0

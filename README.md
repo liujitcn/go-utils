@@ -2,6 +2,8 @@
 
 `go-utils` 是一个通用 Go 工具库，覆盖常用的 ID 生成、时间处理、集合操作、字符串转换、文件路径与 TLS/JWT/密码学能力。
 
+项目要求 Go 1.27，基础切片与 map 操作优先使用标准库 `slices`、`maps`，指针构造优先使用 Go 1.26 引入的 `new(expr)`。
+
 ## 安装
 
 ```bash
@@ -18,15 +20,15 @@ go get github.com/liujitcn/go-utils@latest
 - `github.com/liujitcn/go-utils/id`：Snowflake、UUIDv4/v7、XID
 - `github.com/liujitcn/go-utils/io`：文件读取、路径匹配、文件属性判断
 - `github.com/liujitcn/go-utils/jwt`：JWT 生成/解析/校验（独立子模块）
-- `github.com/liujitcn/go-utils/map`：泛型 map 工具
+- `github.com/liujitcn/go-utils/map`：泛型 map 合并、遍历、过滤工具（键值提取和复制请使用标准库 `maps`）
 - `github.com/liujitcn/go-utils/mapper`：DTO 与实体互转，默认复用 `time` 包内置 `time.Time <-> string` 转换
 - `github.com/liujitcn/go-utils/set`：泛型 set 集合工具，提供对齐 `golang-set/v2` v2.8.0 的接口与线程安全/非线程安全实现
-- `github.com/liujitcn/go-utils/slice`：泛型 slice 工具
+- `github.com/liujitcn/go-utils/slice`：泛型 slice 高阶操作工具（基础查找、复制、插入、删除和分块请使用标准库 `slices`）
 - `github.com/liujitcn/go-utils/string`：字符串与 JSON 数组转换、脱敏、随机数字串
 - `github.com/liujitcn/go-utils/stringcase`：大小驼峰、蛇形、短横线等命名转换
 - `github.com/liujitcn/go-utils/time`：时间格式化、区间、差值、protobuf 时间转换
 - `github.com/liujitcn/go-utils/tls`：TLS 配置加载（文件/内存）
-- `github.com/liujitcn/go-utils/trans`：值与指针/切片互转、Map Key/Value 提取
+- `github.com/liujitcn/go-utils/trans`：值与指针/切片互转（指针构造请优先使用 Go 1.26 的 `new(expr)`）
 - `github.com/liujitcn/go-utils/translator`：统一文本翻译接口，以及 Alibaba、Baidu、Google、Volc 独立 Provider
 
 ## 快速示例
@@ -229,13 +231,13 @@ package main
 
 import (
 	"fmt"
-
-	_map "github.com/liujitcn/go-utils/map"
+	"maps"
+	"slices"
 )
 
 func main() {
 	m := map[string]int{"a": 1, "b": 2}
-	fmt.Println(_map.Keys(m))
+	fmt.Println(slices.Collect(maps.Keys(m)))
 }
 ```
 
@@ -347,9 +349,8 @@ import (
 )
 
 func main() {
-	name := trans.String("alice")
+	name := new("alice")
 	fmt.Println(trans.StringValue(name))
-	fmt.Println(trans.MapKeys(map[string]int{"a": 1, "b": 2}))
 }
 ```
 

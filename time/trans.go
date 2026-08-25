@@ -3,8 +3,6 @@ package time
 import (
 	"time"
 
-	"github.com/liujitcn/go-utils/trans"
-
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -108,7 +106,7 @@ func parseStringToTimeByLayouts(str string, layouts []string) *time.Time {
 // TimestamppbToTime timestamppb.Timestamp -> time.Time
 func TimestamppbToTime(tm *timestamppb.Timestamp) *time.Time {
 	if tm != nil {
-		return new(trans.Ptr(tm.AsTime()))
+		return new(tm.AsTime())
 	}
 	return nil
 }

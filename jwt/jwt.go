@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"net/http"
 	"time"
+	"uuid"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/google/uuid"
 )
 
 // ParseJWTPayload 使用 github.com/golang-jwt/jwt/v5 从 JWT 中解析出 payload
@@ -368,15 +368,7 @@ func NewRefreshToken() (string, error) {
 
 // NewJWTId 生成一个唯一的 JWT ID (jti)
 func NewJWTId() string {
-	u7, err := uuid.NewV7()
-	if err != nil {
-		// Fallback to v4 if system clock is unreliable
-		u4 := uuid.New()
-		var buf [32]byte
-		hex.Encode(buf[:], u4[:])
-		return string(buf[:])
-	}
-
+	u7 := uuid.NewV7()
 	var buf [32]byte
 	hex.Encode(buf[:], u7[:])
 	return string(buf[:])
