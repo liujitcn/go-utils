@@ -1,4 +1,4 @@
-package string
+package _string
 
 import (
 	"crypto/rand"
