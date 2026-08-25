@@ -4,7 +4,7 @@ package baidu
 import (
 	"context"
 	"crypto/md5" // #nosec G501 百度翻译签名协议固定使用 MD5。
-	cryptorand "crypto/rand"
+	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -131,7 +131,7 @@ func (translator *Translator) generateSign(source, salt string) string {
 func newSalt() (string, error) {
 	buffer := make([]byte, 16)
 	var err error
-	_, err = cryptorand.Read(buffer)
+	_, err = rand.Read(buffer)
 	if err != nil {
 		return "", err
 	}

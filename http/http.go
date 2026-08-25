@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	stdhttp "net/http"
+	"net/http"
 
 	"github.com/go-kratos/kratos/v3/log"
 )
@@ -13,7 +13,7 @@ import (
 type Response struct {
 	Status     string
 	StatusCode int
-	Header     stdhttp.Header
+	Header     http.Header
 	Body       []byte
 }
 
@@ -35,14 +35,14 @@ func (c *Client) Do(method, target string, opts ...RequestOption) (*Response, er
 	// 记录最终请求地址，便于排查基础地址与查询参数合并后的实际请求。
 	log.Info("http: request", "method", method, "url", requestURL)
 
-	var req *stdhttp.Request
+	var req *http.Request
 	req, err = c.buildHTTPRequest(method, requestURL, reqOptions)
 	if err != nil {
 		log.Error("http: create request failed", "method", method, "url", requestURL, "error", err)
 		return nil, err
 	}
 
-	var resp *stdhttp.Response
+	var resp *http.Response
 	resp, err = c.httpClient.Do(req)
 	if err != nil {
 		// 请求发送失败时记录最终地址和底层错误，便于定位网络或协议问题。
@@ -67,37 +67,37 @@ func (c *Client) Do(method, target string, opts ...RequestOption) (*Response, er
 
 // Get 发送 GET 请求，并将响应体反序列化到目标对象。
 func (c *Client) Get(target string, result any, opts ...RequestOption) error {
-	return c.DoInto(stdhttp.MethodGet, target, result, opts...)
+	return c.DoInto(http.MethodGet, target, result, opts...)
 }
 
 // Post 发送 POST 请求，并将响应体反序列化到目标对象。
 func (c *Client) Post(target string, result any, opts ...RequestOption) error {
-	return c.DoInto(stdhttp.MethodPost, target, result, opts...)
+	return c.DoInto(http.MethodPost, target, result, opts...)
 }
 
 // Put 发送 PUT 请求，并将响应体反序列化到目标对象。
 func (c *Client) Put(target string, result any, opts ...RequestOption) error {
-	return c.DoInto(stdhttp.MethodPut, target, result, opts...)
+	return c.DoInto(http.MethodPut, target, result, opts...)
 }
 
 // Patch 发送 PATCH 请求，并将响应体反序列化到目标对象。
 func (c *Client) Patch(target string, result any, opts ...RequestOption) error {
-	return c.DoInto(stdhttp.MethodPatch, target, result, opts...)
+	return c.DoInto(http.MethodPatch, target, result, opts...)
 }
 
 // Delete 发送 DELETE 请求，并将响应体反序列化到目标对象。
 func (c *Client) Delete(target string, result any, opts ...RequestOption) error {
-	return c.DoInto(stdhttp.MethodDelete, target, result, opts...)
+	return c.DoInto(http.MethodDelete, target, result, opts...)
 }
 
 // Head 发送 HEAD 请求，并将响应体反序列化到目标对象。
 func (c *Client) Head(target string, result any, opts ...RequestOption) error {
-	return c.DoInto(stdhttp.MethodHead, target, result, opts...)
+	return c.DoInto(http.MethodHead, target, result, opts...)
 }
 
 // Options 发送 OPTIONS 请求，并将响应体反序列化到目标对象。
 func (c *Client) Options(target string, result any, opts ...RequestOption) error {
-	return c.DoInto(stdhttp.MethodOptions, target, result, opts...)
+	return c.DoInto(http.MethodOptions, target, result, opts...)
 }
 
 // DoInto 发送请求，并将响应体反序列化到目标对象。

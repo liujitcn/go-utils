@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	stdhttp "net/http"
+	"net/http"
 	"strconv"
 	"strings"
 	"time"
@@ -54,12 +54,12 @@ func (c *Client) DoSSE(method, target string, opts ...RequestOption) (*SSEStream
 
 // GetSSE 发送 GET 请求，并返回 SSE 事件流读取器。
 func (c *Client) GetSSE(target string, opts ...RequestOption) (*SSEStream, error) {
-	return c.DoSSE(stdhttp.MethodGet, target, opts...)
+	return c.DoSSE(http.MethodGet, target, opts...)
 }
 
 // PostSSE 发送 POST 请求，并返回 SSE 事件流读取器。
 func (c *Client) PostSSE(target string, opts ...RequestOption) (*SSEStream, error) {
-	return c.DoSSE(stdhttp.MethodPost, target, opts...)
+	return c.DoSSE(http.MethodPost, target, opts...)
 }
 
 // NewSSEStream 基于原始 HTTP 流式响应创建 SSE 事件流读取器。

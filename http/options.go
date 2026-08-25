@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	stdhttp "net/http"
+	"net/http"
 	"net/url"
 	"time"
 )
@@ -18,13 +18,13 @@ type RequestOption func(*requestOptions) error
 // requestOptions 单次请求配置。
 type requestOptions struct {
 	context context.Context
-	headers stdhttp.Header
+	headers http.Header
 	query   url.Values
 	body    []byte
 }
 
 // WithHTTPClient 设置自定义 HTTP 客户端。
-func WithHTTPClient(client *stdhttp.Client) ClientOption {
+func WithHTTPClient(client *http.Client) ClientOption {
 	return func(c *Client) {
 		if client == nil {
 			return

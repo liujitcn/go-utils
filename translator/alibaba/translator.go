@@ -8,7 +8,7 @@ import (
 
 	alimt "github.com/alibabacloud-go/alimt-20190107/client"
 	openapi "github.com/alibabacloud-go/darabonba-openapi/v2/client"
-	util "github.com/alibabacloud-go/tea-utils/v2/service"
+	"github.com/alibabacloud-go/tea-utils/v2/service"
 	"github.com/alibabacloud-go/tea/tea"
 )
 
@@ -18,7 +18,7 @@ type translateClient interface {
 	// TranslateGeneralWithOptions 调用阿里云通用文本翻译接口。
 	TranslateGeneralWithOptions(
 		request *alimt.TranslateGeneralRequest,
-		runtime *util.RuntimeOptions,
+		runtime *service.RuntimeOptions,
 	) (*alimt.TranslateGeneralResponse, error)
 }
 
@@ -80,7 +80,7 @@ func (translator *Translator) Translate(
 		FormatType:     tea.String("text"),
 		Scene:          tea.String("general"),
 	}
-	runtime := &util.RuntimeOptions{}
+	runtime := &service.RuntimeOptions{}
 	if deadline, ok := ctx.Deadline(); ok {
 		timeout := time.Until(deadline)
 		if timeout <= 0 {

@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	translateV2 "cloud.google.com/go/translate"
+	"cloud.google.com/go/translate"
 	translateV3 "cloud.google.com/go/translate/apiv3"
 	"cloud.google.com/go/translate/apiv3/translatepb"
 	"github.com/googleapis/gax-go/v2"
@@ -31,8 +31,8 @@ type v2Client interface {
 		ctx context.Context,
 		inputs []string,
 		target language.Tag,
-		options *translateV2.Options,
-	) ([]translateV2.Translation, error)
+		options *translate.Options,
+	) ([]translate.Translation, error)
 	// Close 关闭 Google V2 客户端。
 	Close() error
 }
@@ -152,7 +152,7 @@ func (translator *Translator) TranslateV2(
 		return "", language.Und, fmt.Errorf("Google V2 translate: parse target language: %w", err)
 	}
 
-	translateOptions := &translateV2.Options{Format: translateV2.Text}
+	translateOptions := &translate.Options{Format: translate.Text}
 	if sourceLang != "" && sourceLang != "auto" {
 		translateOptions.Source, err = language.Parse(sourceLang)
 		if err != nil {
@@ -166,7 +166,7 @@ func (translator *Translator) TranslateV2(
 		return "", language.Und, err
 	}
 
-	var translations []translateV2.Translation
+	var translations []translate.Translation
 	translations, err = client.Translate(ctx, []string{source}, targetLanguage, translateOptions)
 	if err != nil {
 		return "", language.Und, fmt.Errorf("Google V2 translate: %w", err)
@@ -268,9 +268,9 @@ func (translator *Translator) ensureV2Client(ctx context.Context) (v2Client, err
 		return translator.clientV2, nil
 	}
 
-	var client *translateV2.Client
+	var client *translate.Client
 	var err error
-	client, err = translateV2.NewClient(ctx, translator.googleClientOptions()...)
+	client, err = translate.NewClient(ctx, translator.googleClientOptions()...)
 	if err != nil {
 		return nil, fmt.Errorf("create Google V2 client: %w", err)
 	}

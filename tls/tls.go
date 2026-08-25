@@ -1,7 +1,7 @@
 package tls
 
 import (
-	gotls "crypto/tls"
+	"crypto/tls"
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
@@ -16,25 +16,25 @@ import (
 // certFile 服务端证书文件路径，必须提供
 // caFile CA根证书，如果提供则为双向认证，否则为单向认证
 // insecureSkipVerify 用来控制客户端是否证书和服务器主机名。如果设置为true,则不会校验证书以及证书中的主机名和服务器主机名是否一致。
-func LoadServerTlsConfigFile(keyFile, certFile, caFile string, insecureSkipVerify bool) (*gotls.Config, error) {
+func LoadServerTlsConfigFile(keyFile, certFile, caFile string, insecureSkipVerify bool) (*tls.Config, error) {
 	if keyFile == "" || certFile == "" {
 		return nil, fmt.Errorf("KeyFile and CertFile must both be present[key: %v, cert: %v]", keyFile, certFile)
 	}
 
-	var cfg gotls.Config
+	var cfg tls.Config
 	cfg.InsecureSkipVerify = insecureSkipVerify
 	//cfg.ServerName = "host.docker.internal"
 	//cfg.MinVersion = gotls.VersionTLS13
 
-	tlsCert, err := gotls.LoadX509KeyPair(certFile, keyFile)
+	tlsCert, err := tls.LoadX509KeyPair(certFile, keyFile)
 	if err != nil {
 		return nil, fmt.Errorf("加载服务端证书文件: %w", err)
 	}
 
-	cfg.Certificates = []gotls.Certificate{tlsCert}
+	cfg.Certificates = []tls.Certificate{tlsCert}
 
 	if caFile != "" {
-		cfg.ClientAuth = gotls.RequireAndVerifyClientCert
+		cfg.ClientAuth = tls.RequireAndVerifyClientCert
 		var cp *x509.CertPool
 		cp, err = newCertPoolWithCaFile(caFile)
 		if err != nil {
@@ -44,32 +44,32 @@ func LoadServerTlsConfigFile(keyFile, certFile, caFile string, insecureSkipVerif
 		cfg.RootCAs = cp
 		cfg.ClientCAs = cp
 	} else {
-		cfg.ClientAuth = gotls.NoClientCert
+		cfg.ClientAuth = tls.NoClientCert
 	}
 
 	return &cfg, nil
 }
 
 // LoadServerTlsConfigString 根据 PEM 内容创建服务端 TLS 配置。
-func LoadServerTlsConfigString(keyPEMBlock, certPEMBlock, caPEMBlock []byte, insecureSkipVerify bool) (*gotls.Config, error) {
+func LoadServerTlsConfigString(keyPEMBlock, certPEMBlock, caPEMBlock []byte, insecureSkipVerify bool) (*tls.Config, error) {
 	if len(keyPEMBlock) == 0 || len(certPEMBlock) == 0 {
 		return nil, fmt.Errorf("KeyPEMBlock and CertPEMBlock must both be present[key: %v, cert: %v]", keyPEMBlock, certPEMBlock)
 	}
 
-	var cfg gotls.Config
+	var cfg tls.Config
 	cfg.InsecureSkipVerify = insecureSkipVerify
 	//cfg.ServerName = "host.docker.internal"
 	//cfg.MinVersion = gotls.VersionTLS13
 
-	tlsCert, err := gotls.X509KeyPair(certPEMBlock, keyPEMBlock)
+	tlsCert, err := tls.X509KeyPair(certPEMBlock, keyPEMBlock)
 	if err != nil {
 		return nil, fmt.Errorf("解析服务端 PEM 证书: %w", err)
 	}
 
-	cfg.Certificates = []gotls.Certificate{tlsCert}
+	cfg.Certificates = []tls.Certificate{tlsCert}
 
 	if len(caPEMBlock) != 0 {
-		cfg.ClientAuth = gotls.RequireAndVerifyClientCert
+		cfg.ClientAuth = tls.RequireAndVerifyClientCert
 		var cp *x509.CertPool
 		cp, err = newCertPool(caPEMBlock)
 		if err != nil {
@@ -79,7 +79,7 @@ func LoadServerTlsConfigString(keyPEMBlock, certPEMBlock, caPEMBlock []byte, ins
 		cfg.RootCAs = cp
 		cfg.ClientCAs = cp
 	} else {
-		cfg.ClientAuth = gotls.NoClientCert
+		cfg.ClientAuth = tls.NoClientCert
 	}
 
 	return &cfg, nil
@@ -89,8 +89,8 @@ func LoadServerTlsConfigString(keyPEMBlock, certPEMBlock, caPEMBlock []byte, ins
 // keyFile 客户端私钥文件路径
 // certFile 客户端证书文件路径
 // caFile CA根证书
-func LoadClientTlsConfigFile(keyFile, certFile, caFile string) (*gotls.Config, error) {
-	var cfg gotls.Config
+func LoadClientTlsConfigFile(keyFile, certFile, caFile string) (*tls.Config, error) {
+	var cfg tls.Config
 	//cfg.InsecureSkipVerify = info.InsecureSkipVerify
 	//cfg.ServerName = "host.docker.internal"
 	//cfg.MinVersion = gotls.VersionTLS13
@@ -99,12 +99,12 @@ func LoadClientTlsConfigFile(keyFile, certFile, caFile string) (*gotls.Config, e
 		return &cfg, nil
 	}
 
-	tlsCert, err := gotls.LoadX509KeyPair(certFile, keyFile)
+	tlsCert, err := tls.LoadX509KeyPair(certFile, keyFile)
 	if err != nil {
 		return nil, fmt.Errorf("加载客户端证书文件: %w", err)
 	}
 
-	cfg.Certificates = []gotls.Certificate{tlsCert}
+	cfg.Certificates = []tls.Certificate{tlsCert}
 
 	if caFile != "" {
 		var cp *x509.CertPool
@@ -120,22 +120,22 @@ func LoadClientTlsConfigFile(keyFile, certFile, caFile string) (*gotls.Config, e
 }
 
 // LoadClientTlsConfigString 根据 PEM 内容创建客户端 TLS 配置。
-func LoadClientTlsConfigString(keyPEMBlock, certPEMBlock, caPEMBlock []byte) (*gotls.Config, error) {
+func LoadClientTlsConfigString(keyPEMBlock, certPEMBlock, caPEMBlock []byte) (*tls.Config, error) {
 	if len(keyPEMBlock) == 0 || len(certPEMBlock) == 0 {
 		return nil, fmt.Errorf("KeyPEMBlock and CertPEMBlock must both be present[key: %v, cert: %v]", keyPEMBlock, certPEMBlock)
 	}
 
-	var cfg gotls.Config
+	var cfg tls.Config
 	//cfg.InsecureSkipVerify = info.InsecureSkipVerify
 	//cfg.ServerName = "host.docker.internal"
 	//cfg.MinVersion = gotls.VersionTLS13
 
-	tlsCert, err := gotls.X509KeyPair(certPEMBlock, keyPEMBlock)
+	tlsCert, err := tls.X509KeyPair(certPEMBlock, keyPEMBlock)
 	if err != nil {
 		return nil, fmt.Errorf("解析客户端 PEM 证书: %w", err)
 	}
 
-	cfg.Certificates = []gotls.Certificate{tlsCert}
+	cfg.Certificates = []tls.Certificate{tlsCert}
 
 	if len(caPEMBlock) != 0 {
 		var cp *x509.CertPool

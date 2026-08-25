@@ -10,6 +10,17 @@
 go get github.com/liujitcn/go-utils@latest
 ```
 
+初始化开发环境执行 `make init`；本仓库没有额外生成插件，目标只安装 `goimports`。
+
+Go import 别名规范化命令由 `kratos-kit` 提供，可从任意目录安装后执行：
+
+```bash
+make cli
+make fmt
+```
+
+`make cli` 会安装规范化命令，`make fmt` 再运行规范化命令并执行 `goimports`。
+
 ## 模块结构
 
 - `github.com/liujitcn/go-utils`：根模块，具体能力按子包引入

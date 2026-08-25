@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	stdhttp "net/http"
+	"net/http"
 	"net/url"
 	"strings"
 	"time"
@@ -12,16 +12,16 @@ import (
 
 // Client HTTP 通用请求客户端。
 type Client struct {
-	httpClient     *stdhttp.Client
+	httpClient     *http.Client
 	baseURL        *url.URL
-	defaultHeaders stdhttp.Header
+	defaultHeaders http.Header
 }
 
 // NewClient 创建 HTTP 通用请求客户端。
 func NewClient(opts ...ClientOption) *Client {
 	client := &Client{
-		httpClient:     &stdhttp.Client{Timeout: 30 * time.Second},
-		defaultHeaders: make(stdhttp.Header),
+		httpClient:     &http.Client{Timeout: 30 * time.Second},
+		defaultHeaders: make(http.Header),
 	}
 	for _, opt := range opts {
 		if opt == nil {
@@ -47,8 +47,8 @@ func (c *Client) buildRequestOptions(opts ...RequestOption) (*requestOptions, er
 }
 
 // buildHTTPRequest 根据请求配置创建标准库请求对象。
-func (c *Client) buildHTTPRequest(method, requestURL string, reqOptions *requestOptions) (*stdhttp.Request, error) {
-	req, err := stdhttp.NewRequestWithContext(reqOptions.context, method, requestURL, bytes.NewReader(reqOptions.body))
+func (c *Client) buildHTTPRequest(method, requestURL string, reqOptions *requestOptions) (*http.Request, error) {
+	req, err := http.NewRequestWithContext(reqOptions.context, method, requestURL, bytes.NewReader(reqOptions.body))
 	if err != nil {
 		return nil, err
 	}
@@ -97,15 +97,15 @@ func (c *Client) buildURL(target string, query url.Values) (string, error) {
 func defaultRequestOptions() *requestOptions {
 	return &requestOptions{
 		context: context.Background(),
-		headers: make(stdhttp.Header),
+		headers: make(http.Header),
 		query:   make(url.Values),
 	}
 }
 
 // cloneHeader 复制请求头，避免共享底层数据。
-func cloneHeader(header stdhttp.Header) stdhttp.Header {
+func cloneHeader(header http.Header) http.Header {
 	if header == nil {
-		return make(stdhttp.Header)
+		return make(http.Header)
 	}
 	return header.Clone()
 }
@@ -121,7 +121,7 @@ func cloneURL(raw *url.URL) *url.URL {
 }
 
 // mergeHeaders 合并请求头，后写入的值覆盖前面的值。
-func mergeHeaders(dst, src stdhttp.Header) {
+func mergeHeaders(dst, src http.Header) {
 	for key, values := range src {
 		if len(values) == 0 {
 			continue
