@@ -29,4 +29,6 @@
 
 - `GenerateAESKey(length int)`：生成 16、24 或 32 字节 AES 密钥。
 - `AesEncrypt(plainText, key, iv []byte)` / `AesDecrypt(cryptedText, key, iv []byte)`：使用 AES-CBC 加解密，保留用于兼容已有调用。
-- `AesGCMEncrypt(plainText, key, nonce []byte)` / `AesGCMDecrypt(cipherText, key, nonce []byte)`：使用 AES-GCM 加解密，推荐用于需要防篡改校验的传输加密场景。
+- `AesGCMEncrypt(plainText, key, nonce []byte)` / `AesGCMDecrypt(cipherText, key, nonce []byte)`：使用 AES-GCM 加解密，附加认证数据为空。
+- `AesGCMEncryptWithAAD(plainText, key, nonce, additionalData []byte)` /
+  `AesGCMDecryptWithAAD(cipherText, key, nonce, additionalData []byte)`：使用 AES-GCM 加解密并校验附加认证数据，推荐用于需要绑定可见元数据的防篡改场景。

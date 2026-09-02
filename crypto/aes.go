@@ -12,6 +12,9 @@ import (
 // DefaultAESKey 默认AES密钥(16字节)
 var DefaultAESKey = []byte("f51d66a73d8a0927")
 
+// AESGCMNonceSize 是标准 AES-GCM 的 nonce 长度。
+const AESGCMNonceSize = 12
+
 // GenerateAESKey 生成AES密钥
 func GenerateAESKey(length int) ([]byte, error) {
 	if length != 16 && length != 24 && length != 32 {
@@ -101,6 +104,11 @@ func AesDecrypt(cryptedText, key, iv []byte) ([]byte, error) {
 
 // AesGCMEncrypt 使用 AES-GCM 加密明文。
 func AesGCMEncrypt(plainText, key, nonce []byte) ([]byte, error) {
+	return AesGCMEncryptWithAAD(plainText, key, nonce, nil)
+}
+
+// AesGCMEncryptWithAAD 使用 AES-GCM 加密明文，并认证附加数据。
+func AesGCMEncryptWithAAD(plainText, key, nonce, additionalData []byte) ([]byte, error) {
 	if plainText == nil {
 		return nil, fmt.Errorf("plain text is nil")
 	}
@@ -114,19 +122,25 @@ func AesGCMEncrypt(plainText, key, nonce []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	aesGCM, err := cipher.NewGCM(block)
+	var aesGCM cipher.AEAD
+	aesGCM, err = cipher.NewGCM(block)
 	if err != nil {
 		return nil, err
 	}
 	if len(nonce) != aesGCM.NonceSize() {
 		return nil, fmt.Errorf("invalid nonce length: %d, must be %d bytes", len(nonce), aesGCM.NonceSize())
 	}
-	cipherText := aesGCM.Seal(nil, nonce, plainText, nil)
+	cipherText := aesGCM.Seal(nil, nonce, plainText, additionalData)
 	return cipherText, nil
 }
 
 // AesGCMDecrypt 使用 AES-GCM 解密密文。
 func AesGCMDecrypt(cipherText, key, nonce []byte) ([]byte, error) {
+	return AesGCMDecryptWithAAD(cipherText, key, nonce, nil)
+}
+
+// AesGCMDecryptWithAAD 使用 AES-GCM 解密密文，并校验附加数据。
+func AesGCMDecryptWithAAD(cipherText, key, nonce, additionalData []byte) ([]byte, error) {
 	if cipherText == nil {
 		return nil, fmt.Errorf("cipher text is nil")
 	}
@@ -140,14 +154,15 @@ func AesGCMDecrypt(cipherText, key, nonce []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	aesGCM, err := cipher.NewGCM(block)
+	var aesGCM cipher.AEAD
+	aesGCM, err = cipher.NewGCM(block)
 	if err != nil {
 		return nil, err
 	}
 	if len(nonce) != aesGCM.NonceSize() {
 		return nil, fmt.Errorf("invalid nonce length: %d, must be %d bytes", len(nonce), aesGCM.NonceSize())
 	}
-	plainText, err := aesGCM.Open(nil, nonce, cipherText, nil)
+	plainText, err := aesGCM.Open(nil, nonce, cipherText, additionalData)
 	if err != nil {
 		return nil, err
 	}
