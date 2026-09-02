@@ -9,6 +9,7 @@
 | PBKDF2                                        | 基于 HMAC 的密钥派生函数，支持多种哈希算法。     | 密码存储，兼容性好。             |
 | SHA-256/SHA-512                               | 快速单向哈希算法，无内置盐值。               | 数据完整性校验，需手动添加盐值用于密码存储。 |
 | AES (Advanced Encryption Standard)            | 对称加密算法，支持 128/192/256 位密钥。    | 数据加密传输或存储。             |
+| SM4                                            | 国密分组对称加密算法，支持 128 位密钥。      | 国密数据加密传输或存储。         |
 | RSA                                           | 非对称加密算法，基于大整数分解难题。            | 数据加密、数字签名。             |
 | ECDSA/ECDH (椭圆曲线算法)                           | 基于椭圆曲线的非对称加密，密钥更短但安全性高。       | 数据完整性和认证。              |
 | HMAC (Hash-based Message Authentication Code) | 基于哈希算法的消息认证码。                 | 数据完整性和认证。              |
@@ -32,3 +33,8 @@
 - `AesGCMEncrypt(plainText, key, nonce []byte)` / `AesGCMDecrypt(cipherText, key, nonce []byte)`：使用 AES-GCM 加解密，附加认证数据为空。
 - `AesGCMEncryptWithAAD(plainText, key, nonce, additionalData []byte)` /
   `AesGCMDecryptWithAAD(cipherText, key, nonce, additionalData []byte)`：使用 AES-GCM 加解密并校验附加认证数据，推荐用于需要绑定可见元数据的防篡改场景。
+
+## SM4
+
+- `Sm4Encrypt(plainText, key, iv []byte)` / `Sm4Decrypt(cipherText, key, iv []byte)`：使用 SM4-CBC 和 PKCS#5 填充加解密。
+- `Sm4GCMEncrypt(plainText, key, nonce []byte)` / `Sm4GCMDecrypt(cipherText, key, nonce []byte)`：使用 SM4-GCM 加解密。
