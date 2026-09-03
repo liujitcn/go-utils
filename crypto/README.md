@@ -34,6 +34,11 @@
 - `AesGCMEncryptWithAAD(plainText, key, nonce, additionalData []byte)` /
   `AesGCMDecryptWithAAD(cipherText, key, nonce, additionalData []byte)`：使用 AES-GCM 加解密并校验附加认证数据，推荐用于需要绑定可见元数据的防篡改场景。
 
+## OpenSSL 兼容文件加解密
+
+- `NewOpenSSLFileCrypto()`：创建固定参数的 OpenSSL `enc` 兼容文件加解密器。
+- `EncryptReader(password, source, target)` / `DecryptReader(password, source, target)`：使用 PBKDF2-HMAC-SHA256、AES-256-CBC 和 PKCS#7 填充处理流式文件；文件格式为 `Salted__`、8 字节盐值和密文，适合与 OpenSSL `enc` 互操作。
+
 ## SM4
 
 - `Sm4Encrypt(plainText, key, iv []byte)` / `Sm4Decrypt(cipherText, key, iv []byte)`：使用 SM4-CBC 和 PKCS#5 填充加解密。
