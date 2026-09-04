@@ -5,7 +5,7 @@ go 1.27.0
 require (
 	cloud.google.com/go/translate v1.12.7
 	github.com/googleapis/gax-go/v2 v2.17.0
-	github.com/liujitcn/go-utils/http v0.0.5
+	github.com/liujitcn/go-utils/http v0.0.7
 	golang.org/x/text v0.37.0
 	google.golang.org/api v0.269.0
 )
