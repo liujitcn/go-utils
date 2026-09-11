@@ -14,6 +14,8 @@ go get github.com/liujitcn/go-utils/http@latest
 - 支持 `DoStream`、`GetStream`、`PostStream` 等 HTTP Stream 请求
 - 支持 `DoSSE`、`GetSSE`、`PostSSE` 解析 `text/event-stream`
 - 支持 `WithBaseURL`、`WithTimeout`、`WithNoTimeout`、`WithDefaultHeader`
+- 支持 `WithMaxResponseBodyBytes` 限制普通响应体大小，避免无界读取
+- 支持 `WithRequestLog(false)` 关闭包含完整 URL 的普通请求日志
 - 支持 `WithHeader`、`WithQuery`、`WithJSONBody`、`WithFormBody`
 - `Do` 会通过 Kratos log 记录最终请求地址，请求失败时会记录对应错误信息
 - `DoStream` 与 SSE 请求会自动关闭客户端总超时，长连接取消建议使用 `WithContext`

@@ -50,6 +50,20 @@ func WithNoTimeout() ClientOption {
 	}
 }
 
+// WithMaxResponseBodyBytes 限制普通请求读取的响应体大小，非正数表示不限制。
+func WithMaxResponseBodyBytes(limit int64) ClientOption {
+	return func(c *Client) {
+		c.maxBodyBytes = limit
+	}
+}
+
+// WithRequestLog 控制是否记录普通请求的完整URL，默认开启。
+func WithRequestLog(enabled bool) ClientOption {
+	return func(c *Client) {
+		c.requestLog = enabled
+	}
+}
+
 // WithBaseURL 设置请求基础地址。
 func WithBaseURL(raw string) ClientOption {
 	return func(c *Client) {

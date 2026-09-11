@@ -15,6 +15,8 @@ type Client struct {
 	httpClient     *http.Client
 	baseURL        *url.URL
 	defaultHeaders http.Header
+	maxBodyBytes   int64
+	requestLog     bool
 }
 
 // NewClient 创建 HTTP 通用请求客户端。
@@ -22,6 +24,7 @@ func NewClient(opts ...ClientOption) *Client {
 	client := &Client{
 		httpClient:     &http.Client{Timeout: 30 * time.Second},
 		defaultHeaders: make(http.Header),
+		requestLog:     true,
 	}
 	for _, opt := range opts {
 		if opt == nil {

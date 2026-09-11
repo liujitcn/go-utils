@@ -2,12 +2,16 @@ package http
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 
 	"github.com/go-kratos/kratos/v3/log"
 )
+
+// ErrResponseBodyTooLarge 表示普通请求响应体超过客户端配置上限。
+var ErrResponseBodyTooLarge = errors.New("http: response body exceeds configured limit")
 
 // Response HTTP 响应结果。
 type Response struct {
@@ -21,39 +25,51 @@ type Response struct {
 func (c *Client) Do(method, target string, opts ...RequestOption) (*Response, error) {
 	reqOptions, err := c.buildRequestOptions(opts...)
 	if err != nil {
-		log.Error("http: build request options failed", "method", method, "target", target, "error", err)
+		if c.requestLog {
+			log.Error("http: build request options failed", "method", method, "target", target, "error", err)
+		}
 		return nil, err
 	}
 
 	var requestURL string
 	requestURL, err = c.buildURL(target, reqOptions.query)
 	if err != nil {
-		log.Error("http: build request url failed", "target", target, "error", err)
+		if c.requestLog {
+			log.Error("http: build request url failed", "target", target, "error", err)
+		}
 		return nil, err
 	}
 
-	// 记录最终请求地址，便于排查基础地址与查询参数合并后的实际请求。
-	log.Info("http: request", "method", method, "url", requestURL)
+	if c.requestLog {
+		// 记录最终请求地址，便于排查基础地址与查询参数合并后的实际请求。
+		log.Info("http: request", "method", method, "url", requestURL)
+	}
 
 	var req *http.Request
 	req, err = c.buildHTTPRequest(method, requestURL, reqOptions)
 	if err != nil {
-		log.Error("http: create request failed", "method", method, "url", requestURL, "error", err)
+		if c.requestLog {
+			log.Error("http: create request failed", "method", method, "url", requestURL, "error", err)
+		}
 		return nil, err
 	}
 
 	var resp *http.Response
 	resp, err = c.httpClient.Do(req)
 	if err != nil {
-		// 请求发送失败时记录最终地址和底层错误，便于定位网络或协议问题。
-		log.Error("http: request failed", "method", method, "url", requestURL, "error", err)
+		if c.requestLog {
+			// 请求发送失败时记录最终地址和底层错误，便于定位网络或协议问题。
+			log.Error("http: request failed", "method", method, "url", requestURL, "error", err)
+		}
 		return nil, err
 	}
 
 	var body []byte
-	body, err = readAndCloseBody(resp.Body)
+	body, err = readAndCloseBody(resp.Body, c.maxBodyBytes)
 	if err != nil {
-		log.Error("http: read response body failed", "method", method, "url", requestURL, "error", err)
+		if c.requestLog {
+			log.Error("http: read response body failed", "method", method, "url", requestURL, "error", err)
+		}
 		return nil, err
 	}
 
@@ -130,8 +146,8 @@ func (r *Response) String() string {
 	return string(r.Body)
 }
 
-// readAndCloseBody 读取响应体内容，并确保在所有路径中关闭响应流。
-func readAndCloseBody(body io.ReadCloser) ([]byte, error) {
+// readAndCloseBody 在配置上限内读取响应体，并确保在所有路径中关闭响应流。
+func readAndCloseBody(body io.ReadCloser, limit int64) ([]byte, error) {
 	if body == nil {
 		return nil, nil
 	}
@@ -141,9 +157,16 @@ func readAndCloseBody(body io.ReadCloser) ([]byte, error) {
 		_ = body.Close()
 	}()
 
-	data, err := io.ReadAll(body)
+	reader := io.Reader(body)
+	if limit > 0 {
+		reader = io.LimitReader(body, limit+1)
+	}
+	data, err := io.ReadAll(reader)
 	if err != nil {
 		return nil, err
+	}
+	if limit > 0 && int64(len(data)) > limit {
+		return nil, ErrResponseBodyTooLarge
 	}
 	return data, nil
 }
