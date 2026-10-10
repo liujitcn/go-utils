@@ -1,4 +1,3 @@
-// Package google 提供 Google V1、V2 和 V3 翻译适配器。
 package google
 
 import (
@@ -84,7 +83,7 @@ func (translator *Translator) Translate(
 	case "v3":
 		return translator.TranslateV3(ctx, source, sourceLang, targetLang)
 	default:
-		return "", fmt.Errorf("Google translate: unsupported version %q", translator.options.version)
+		return "", fmt.Errorf("google translate: unsupported version %q", translator.options.version)
 	}
 }
 
@@ -99,7 +98,7 @@ func (translator *Translator) TranslateV1(
 		return "", err
 	}
 	if source == "" {
-		return "", fmt.Errorf("Google V1 translate: source cannot be empty")
+		return "", fmt.Errorf("google V1 translate: source cannot be empty")
 	}
 
 	client := httputil.NewClient(httputil.WithHTTPClient(translator.options.httpClient))
@@ -115,19 +114,19 @@ func (translator *Translator) TranslateV1(
 		httputil.WithQuery("q", source),
 	)
 	if err != nil {
-		return "", fmt.Errorf("Google V1 translate: send request: %w", err)
+		return "", fmt.Errorf("google V1 translate: send request: %w", err)
 	}
 	if len(response.Body) > maxResponseSize {
-		return "", fmt.Errorf("Google V1 translate: response exceeds %d bytes", maxResponseSize)
+		return "", fmt.Errorf("google V1 translate: response exceeds %d bytes", maxResponseSize)
 	}
 	if response.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("Google V1 translate: HTTP status %d", response.StatusCode)
+		return "", fmt.Errorf("google V1 translate: HTTP status %d", response.StatusCode)
 	}
 
 	var translated string
 	translated, err = decodeV1Response(response.Body)
 	if err != nil {
-		return "", fmt.Errorf("Google V1 translate: %w", err)
+		return "", fmt.Errorf("google V1 translate: %w", err)
 	}
 	return translated, nil
 }
@@ -143,20 +142,20 @@ func (translator *Translator) TranslateV2(
 		return "", language.Und, err
 	}
 	if source == "" {
-		return "", language.Und, fmt.Errorf("Google V2 translate: source cannot be empty")
+		return "", language.Und, fmt.Errorf("google V2 translate: source cannot be empty")
 	}
 
 	var targetLanguage language.Tag
 	targetLanguage, err = language.Parse(targetLang)
 	if err != nil {
-		return "", language.Und, fmt.Errorf("Google V2 translate: parse target language: %w", err)
+		return "", language.Und, fmt.Errorf("google V2 translate: parse target language: %w", err)
 	}
 
 	translateOptions := &translate.Options{Format: translate.Text}
 	if sourceLang != "" && sourceLang != "auto" {
 		translateOptions.Source, err = language.Parse(sourceLang)
 		if err != nil {
-			return "", language.Und, fmt.Errorf("Google V2 translate: parse source language: %w", err)
+			return "", language.Und, fmt.Errorf("google V2 translate: parse source language: %w", err)
 		}
 	}
 
@@ -169,10 +168,10 @@ func (translator *Translator) TranslateV2(
 	var translations []translate.Translation
 	translations, err = client.Translate(ctx, []string{source}, targetLanguage, translateOptions)
 	if err != nil {
-		return "", language.Und, fmt.Errorf("Google V2 translate: %w", err)
+		return "", language.Und, fmt.Errorf("google V2 translate: %w", err)
 	}
 	if len(translations) != 1 {
-		return "", language.Und, fmt.Errorf("Google V2 translate: expected one translation, got %d", len(translations))
+		return "", language.Und, fmt.Errorf("google V2 translate: expected one translation, got %d", len(translations))
 	}
 
 	detectedLanguage := translations[0].Source
@@ -193,13 +192,13 @@ func (translator *Translator) TranslateV3(
 		return "", err
 	}
 	if source == "" {
-		return "", fmt.Errorf("Google V3 translate: source cannot be empty")
+		return "", fmt.Errorf("google V3 translate: source cannot be empty")
 	}
 
 	parent := translator.options.parent
 	if parent == "" {
 		if translator.options.projectID == "" {
-			return "", fmt.Errorf("Google V3 translate: project ID or parent is required")
+			return "", fmt.Errorf("google V3 translate: project ID or parent is required")
 		}
 		parent = fmt.Sprintf(
 			"projects/%s/locations/%s",
@@ -227,10 +226,10 @@ func (translator *Translator) TranslateV3(
 	var response *translatepb.TranslateTextResponse
 	response, err = client.TranslateText(ctx, request)
 	if err != nil {
-		return "", fmt.Errorf("Google V3 translate: %w", err)
+		return "", fmt.Errorf("google V3 translate: %w", err)
 	}
 	if response == nil || len(response.GetTranslations()) != 1 {
-		return "", fmt.Errorf("Google V3 translate: expected one translation")
+		return "", fmt.Errorf("google V3 translate: expected one translation")
 	}
 	return response.GetTranslations()[0].GetTranslatedText(), nil
 }
