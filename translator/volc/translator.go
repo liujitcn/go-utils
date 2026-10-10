@@ -1,4 +1,3 @@
-// Package volc 提供火山引擎机器翻译适配器。
 package volc
 
 import (
@@ -91,7 +90,7 @@ func (translator *Translator) Translate(
 	source, sourceLang, targetLang string,
 ) (string, error) {
 	if source == "" {
-		return "", fmt.Errorf("Volc translate: source cannot be empty")
+		return "", fmt.Errorf("volc translate: source cannot be empty")
 	}
 
 	var translations []string
@@ -119,7 +118,7 @@ func (translator *Translator) TranslateBatch(
 	}
 	for index, source := range sources {
 		if source == "" {
-			return nil, fmt.Errorf("Volc translate: source at index %d cannot be empty", index)
+			return nil, fmt.Errorf("volc translate: source at index %d cannot be empty", index)
 		}
 	}
 
@@ -139,7 +138,7 @@ func (translator *Translator) TranslateBatch(
 	}
 	if len(response.TranslationList) != len(sources) {
 		return nil, fmt.Errorf(
-			"Volc translate: expected %d translations, got %d",
+			"volc translate: expected %d translations, got %d",
 			len(sources),
 			len(response.TranslationList),
 		)
@@ -170,7 +169,7 @@ func (translator *Translator) callAPI(
 	var err error
 	requestBody, err = json.Marshal(request)
 	if err != nil {
-		return translateTextResponse{}, fmt.Errorf("Volc translate: encode request: %w", err)
+		return translateTextResponse{}, fmt.Errorf("volc translate: encode request: %w", err)
 	}
 
 	var responseBody []byte
@@ -182,16 +181,16 @@ func (translator *Translator) callAPI(
 		string(requestBody),
 	)
 	if err != nil {
-		return translateTextResponse{}, fmt.Errorf("Volc translate: send request: %w", err)
+		return translateTextResponse{}, fmt.Errorf("volc translate: send request: %w", err)
 	}
 	if statusCode < http.StatusOK || statusCode >= http.StatusMultipleChoices {
-		return translateTextResponse{}, fmt.Errorf("Volc translate: HTTP status %d", statusCode)
+		return translateTextResponse{}, fmt.Errorf("volc translate: HTTP status %d", statusCode)
 	}
 
 	var response translateTextResponse
 	err = json.Unmarshal(responseBody, &response)
 	if err != nil {
-		return translateTextResponse{}, fmt.Errorf("Volc translate: decode response: %w", err)
+		return translateTextResponse{}, fmt.Errorf("volc translate: decode response: %w", err)
 	}
 
 	metadata := response.ResponseMetadata
@@ -200,7 +199,7 @@ func (translator *Translator) callAPI(
 	}
 	if metadata.Error != nil {
 		return translateTextResponse{}, fmt.Errorf(
-			"Volc translate: code=%s, message=%s",
+			"volc translate: code=%s, message=%s",
 			metadata.Error.Code,
 			metadata.Error.Message,
 		)
