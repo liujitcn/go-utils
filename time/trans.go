@@ -24,7 +24,12 @@ var stringDateLayouts = []string{
 
 // RefreshDefaultTimeLocation 刷新默认时区配置。
 func RefreshDefaultTimeLocation(name string) {
-	DefaultTimeLocation, _ = time.LoadLocation(name)
+	location, err := time.LoadLocation(name)
+	if err != nil {
+		DefaultTimeLocation = time.Local
+		return
+	}
+	DefaultTimeLocation = location
 }
 
 // UnixMilliToStringPtr 毫秒时间戳 -> 字符串
@@ -38,7 +43,7 @@ func UnixMilliToStringPtr(tm *int64) *string {
 // StringToUnixMilliInt64Ptr 字符串 -> 毫秒时间戳
 func StringToUnixMilliInt64Ptr(tm string) int64 {
 	theTime := StringTimeToTime(tm)
-	if theTime.IsZero() {
+	if theTime == nil || theTime.IsZero() {
 		return 0
 	}
 	unixTime := theTime.UnixMilli()

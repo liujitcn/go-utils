@@ -53,7 +53,7 @@ func LoadServerTlsConfigFile(keyFile, certFile, caFile string, insecureSkipVerif
 // LoadServerTlsConfigString 根据 PEM 内容创建服务端 TLS 配置。
 func LoadServerTlsConfigString(keyPEMBlock, certPEMBlock, caPEMBlock []byte, insecureSkipVerify bool) (*tls.Config, error) {
 	if len(keyPEMBlock) == 0 || len(certPEMBlock) == 0 {
-		return nil, fmt.Errorf("KeyPEMBlock and CertPEMBlock must both be present[key: %v, cert: %v]", keyPEMBlock, certPEMBlock)
+		return nil, fmt.Errorf("key PEM and certificate PEM must both be present")
 	}
 
 	var cfg tls.Config
@@ -95,8 +95,11 @@ func LoadClientTlsConfigFile(keyFile, certFile, caFile string) (*tls.Config, err
 	//cfg.ServerName = "host.docker.internal"
 	//cfg.MinVersion = gotls.VersionTLS13
 
-	if keyFile == "" || certFile == "" {
+	if keyFile == "" && certFile == "" {
 		return &cfg, nil
+	}
+	if keyFile == "" || certFile == "" {
+		return nil, fmt.Errorf("client key file and certificate file must both be present")
 	}
 
 	tlsCert, err := tls.LoadX509KeyPair(certFile, keyFile)
@@ -122,7 +125,7 @@ func LoadClientTlsConfigFile(keyFile, certFile, caFile string) (*tls.Config, err
 // LoadClientTlsConfigString 根据 PEM 内容创建客户端 TLS 配置。
 func LoadClientTlsConfigString(keyPEMBlock, certPEMBlock, caPEMBlock []byte) (*tls.Config, error) {
 	if len(keyPEMBlock) == 0 || len(certPEMBlock) == 0 {
-		return nil, fmt.Errorf("KeyPEMBlock and CertPEMBlock must both be present[key: %v, cert: %v]", keyPEMBlock, certPEMBlock)
+		return nil, fmt.Errorf("key PEM and certificate PEM must both be present")
 	}
 
 	var cfg tls.Config
@@ -167,9 +170,13 @@ func newCertPool(caPEMBlock []byte) (*x509.CertPool, error) {
 	var block *pem.Block
 	var cert *x509.Certificate
 	var err error
+	var certificateCount int
 	for {
 		block, caPEMBlock = pem.Decode(caPEMBlock)
 		if block == nil {
+			if certificateCount == 0 {
+				return nil, fmt.Errorf("CA PEM contains no certificates")
+			}
 			return certPool, nil
 		}
 
@@ -179,6 +186,7 @@ func newCertPool(caPEMBlock []byte) (*x509.CertPool, error) {
 		}
 
 		certPool.AddCert(cert)
+		certificateCount++
 	}
 
 	//if !certPool.AppendCertsFromPEM(caPEMBlock) {

@@ -2,7 +2,6 @@ package io
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -43,14 +42,18 @@ func GetAbsPath() string {
 func GetFileList(root string) []string {
 	var files []string
 
-	if err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+	walkErr := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
 		if info.IsDir() {
 			return nil
 		}
 
 		files = append(files, path)
 		return nil
-	}); err != nil {
+	})
+	if walkErr != nil {
 		return nil
 	}
 
@@ -60,10 +63,13 @@ func GetFileList(root string) []string {
 // GetFolderNameList 获取目录下的一级文件夹名称列表。
 func GetFolderNameList(root string) []string {
 	var names []string
-	fs, _ := os.ReadDir(root)
-	for _, file := range fs {
-		if file.IsDir() {
-			names = append(names, file.Name())
+	entries, err := os.ReadDir(root)
+	if err != nil {
+		return nil
+	}
+	for _, entry := range entries {
+		if entry.IsDir() {
+			names = append(names, entry.Name())
 		}
 	}
 	return names
@@ -120,7 +126,7 @@ func IsNonemptyFile(path string) bool {
 // IsNonemptyDir 判断路径是否为非空目录。
 func IsNonemptyDir(path string) bool {
 	if DirExists(path) {
-		if entries, err := ioutil.ReadDir(path); err == nil && len(entries) > 0 {
+		if entries, err := os.ReadDir(path); err == nil && len(entries) > 0 {
 			return true
 		}
 	}
@@ -139,7 +145,7 @@ func Exists(path string) bool {
 
 // LinkExists 判断路径是否对应符号链接。
 func LinkExists(path string) bool {
-	if stat, err := os.Stat(path); err == nil {
+	if stat, err := os.Lstat(path); err == nil {
 		return IsSymlink(stat.Mode())
 	}
 
@@ -233,30 +239,36 @@ func IsAppend(mode os.FileMode) bool {
 
 // IsReadable 判断文件是否可读。
 func IsReadable(filename string) bool {
-	if f, err := os.OpenFile(filename, os.O_RDONLY, 0); err == nil {
-		defer f.Close()
-		return true
-	} else {
+	f, err := os.OpenFile(filename, os.O_RDONLY, 0)
+	if err != nil {
 		return false
 	}
+	if err = f.Close(); err != nil {
+		return false
+	}
+	return true
 }
 
 // IsWritable 判断文件是否可写。
 func IsWritable(filename string) bool {
-	if f, err := os.OpenFile(filename, os.O_WRONLY, 0); err == nil {
-		defer f.Close()
-		return true
-	} else {
+	f, err := os.OpenFile(filename, os.O_WRONLY, 0)
+	if err != nil {
 		return false
 	}
+	if err = f.Close(); err != nil {
+		return false
+	}
+	return true
 }
 
 // IsAppendable 判断文件是否可追加写。
 func IsAppendable(filename string) bool {
-	if f, err := os.OpenFile(filename, os.O_APPEND, 0); err == nil {
-		defer f.Close()
-		return true
-	} else {
+	f, err := os.OpenFile(filename, os.O_WRONLY|os.O_APPEND, 0)
+	if err != nil {
 		return false
 	}
+	if err = f.Close(); err != nil {
+		return false
+	}
+	return true
 }

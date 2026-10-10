@@ -7,10 +7,11 @@ func Enum[T any](v T) *T {
 	return &v
 }
 
-// EnumValue 解引用枚举指针，空指针时返回 nil。
-func EnumValue[T *any](v *T) T {
+// EnumValue 解引用枚举指针，空指针时返回零值。
+func EnumValue[T any](v *T) T {
 	if v == nil {
-		return nil
+		var zero T
+		return zero
 	}
 	return *v
 }

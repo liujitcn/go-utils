@@ -1,4 +1,3 @@
-// Package set 提供泛型集合能力。
 package set
 
 import (

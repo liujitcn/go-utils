@@ -1,27 +1,23 @@
 package byte
 
 import (
-	"bytes"
 	"encoding/binary"
 )
 
 // IntToBytes 将int转换为[]byte
 func IntToBytes(n int) []byte {
-	data := int64(n)
-	byteBuf := bytes.NewBuffer([]byte{})
-	_ = binary.Write(byteBuf, binary.BigEndian, data)
-	return byteBuf.Bytes()
+	return binary.BigEndian.AppendUint64(nil, uint64(int64(n)))
 }
 
 // BytesToInt 将[]byte转换为int
 func BytesToInt(bys []byte) int {
-	byteBuf := bytes.NewBuffer(bys)
-	var data int64
-	_ = binary.Read(byteBuf, binary.BigEndian, &data)
-	return int(data)
+	if len(bys) < 8 {
+		return 0
+	}
+	return int(int64(binary.BigEndian.Uint64(bys)))
 }
 
-// ByteToLower lowers a byte
+// ByteToLower 将 ASCII 大写字节转换为小写。
 func ByteToLower(b byte) byte {
 	if b <= '\u007F' {
 		if 'A' <= b && b <= 'Z' {
@@ -32,7 +28,7 @@ func ByteToLower(b byte) byte {
 	return b
 }
 
-// ByteToUpper upper a byte
+// ByteToUpper 将 ASCII 小写字节转换为大写。
 func ByteToUpper(b byte) byte {
 	if b <= '\u007F' {
 		if 'a' <= b && b <= 'z' {

@@ -57,7 +57,7 @@ func SecondToDurationpb(seconds *float64) *durationpb.Duration {
 	if seconds == nil {
 		return nil
 	}
-	return durationpb.New(time.Duration(*seconds) * time.Second)
+	return durationpb.New(time.Duration(*seconds * float64(time.Second)))
 }
 
 // DurationpbSecond 将 protobuf Duration 转换为秒数字指针。
