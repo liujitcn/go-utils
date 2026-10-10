@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"net/http"
 	"strconv"
 	"strings"
@@ -123,7 +124,7 @@ func (e *SSEEvent) DecodeJSON(target any) error {
 	return json.Unmarshal([]byte(e.Data), target)
 }
 
-// IsDone 判断当前 SSE data 是否为 AI 流式接口常见的结束标记。
+// IsDone 判断当前 SSE data 是否为 AI 流式接口常见结束标记。
 func (e *SSEEvent) IsDone() bool {
 	if e == nil {
 		return false
@@ -207,7 +208,7 @@ func (b *sseEventBuilder) reset() {
 // parseSSERetry 解析 SSE retry 字段，单位为毫秒。
 func parseSSERetry(value string) (time.Duration, bool) {
 	retryMilliseconds, err := strconv.Atoi(value)
-	if err != nil || retryMilliseconds < 0 {
+	if err != nil || retryMilliseconds < 0 || uint64(retryMilliseconds) > uint64(math.MaxInt64/int64(time.Millisecond)) {
 		return 0, false
 	}
 	return time.Duration(retryMilliseconds) * time.Millisecond, true

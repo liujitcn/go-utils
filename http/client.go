@@ -118,9 +118,7 @@ func cloneURL(raw *url.URL) *url.URL {
 	if raw == nil {
 		return nil
 	}
-	cloned := new(url.URL)
-	*cloned = *raw
-	return cloned
+	return raw.Clone()
 }
 
 // mergeHeaders 合并请求头，后写入的值覆盖前面的值。

@@ -64,13 +64,30 @@ func (c *Client) Do(method, target string, opts ...RequestOption) (*Response, er
 		return nil, err
 	}
 
+	defer func() {
+		if closeErr := resp.Body.Close(); closeErr != nil && c.requestLog {
+			log.Error("http: close response body failed", "method", method, "url", requestURL, "error", closeErr)
+		}
+	}()
+
+	reader := io.Reader(resp.Body)
+	if c.maxBodyBytes > 0 {
+		reader = io.LimitReader(resp.Body, c.maxBodyBytes+1)
+	}
+
 	var body []byte
-	body, err = readAndCloseBody(resp.Body, c.maxBodyBytes)
+	body, err = io.ReadAll(reader)
 	if err != nil {
 		if c.requestLog {
 			log.Error("http: read response body failed", "method", method, "url", requestURL, "error", err)
 		}
 		return nil, err
+	}
+	if c.maxBodyBytes > 0 && int64(len(body)) > c.maxBodyBytes {
+		if c.requestLog {
+			log.Error("http: read response body failed", "method", method, "url", requestURL, "error", ErrResponseBodyTooLarge)
+		}
+		return nil, ErrResponseBodyTooLarge
 	}
 
 	return &Response{
@@ -120,6 +137,8 @@ func (c *Client) Options(target string, result any, opts ...RequestOption) error
 func (c *Client) DoInto(method, target string, result any, opts ...RequestOption) error {
 	var response *Response
 	var err error
+	// Do 会在返回前读取并关闭响应体；此处是 GoLand 无法跨方法识别的误报。
+	//noinspection GoResourceLeak
 	response, err = c.Do(method, target, opts...)
 	if err != nil {
 		return err
@@ -144,29 +163,4 @@ func (r *Response) DecodeJSON(target any) error {
 // String 返回响应体字符串。
 func (r *Response) String() string {
 	return string(r.Body)
-}
-
-// readAndCloseBody 在配置上限内读取响应体，并确保在所有路径中关闭响应流。
-func readAndCloseBody(body io.ReadCloser, limit int64) ([]byte, error) {
-	if body == nil {
-		return nil, nil
-	}
-
-	// 统一在辅助方法内关闭响应体，避免调用方遗漏关闭导致资源泄漏告警。
-	defer func() {
-		_ = body.Close()
-	}()
-
-	reader := io.Reader(body)
-	if limit > 0 {
-		reader = io.LimitReader(body, limit+1)
-	}
-	data, err := io.ReadAll(reader)
-	if err != nil {
-		return nil, err
-	}
-	if limit > 0 && int64(len(data)) > limit {
-		return nil, ErrResponseBodyTooLarge
-	}
-	return data, nil
 }
