@@ -30,6 +30,9 @@ func GenerateAESKey(length int) ([]byte, error) {
 
 // PKCS5Padding 填充明文
 func PKCS5Padding(plaintext []byte, blockSize int) []byte {
+	if blockSize <= 0 || blockSize > 255 {
+		return nil
+	}
 	padding := blockSize - len(plaintext)%blockSize
 	padText := bytes.Repeat([]byte{byte(padding)}, padding)
 	return append(plaintext, padText...)
@@ -38,8 +41,19 @@ func PKCS5Padding(plaintext []byte, blockSize int) []byte {
 // PKCS5UnPadding 去除填充数据
 func PKCS5UnPadding(origData []byte) []byte {
 	length := len(origData)
-	unpadding := int(origData[length-1])
-	return origData[:(length - unpadding)]
+	if length == 0 {
+		return nil
+	}
+	unPadding := int(origData[length-1])
+	if unPadding == 0 || unPadding > aes.BlockSize || unPadding > length {
+		return nil
+	}
+	for _, value := range origData[length-unPadding:] {
+		if int(value) != unPadding {
+			return nil
+		}
+	}
+	return origData[:(length - unPadding)]
 }
 
 // AesEncrypt AES加密
@@ -62,6 +76,9 @@ func AesEncrypt(plainText, key, iv []byte) ([]byte, error) {
 	if iv == nil {
 		// 初始向量的长度必须等于块block的长度16字节
 		iv = key[:blockSize]
+	}
+	if len(iv) != blockSize {
+		return nil, fmt.Errorf("invalid iv length: %d, must be %d bytes", len(iv), blockSize)
 	}
 
 	plainText = PKCS5Padding(plainText, blockSize)
@@ -88,10 +105,16 @@ func AesDecrypt(cryptedText, key, iv []byte) ([]byte, error) {
 
 	//AES分组长度为128位，所以blockSize=16，单位字节
 	blockSize := block.BlockSize()
+	if len(cryptedText) == 0 || len(cryptedText)%blockSize != 0 {
+		return nil, fmt.Errorf("invalid cipher text length")
+	}
 
 	if iv == nil {
 		// 初始向量的长度必须等于块block的长度16字节
 		iv = key[:blockSize]
+	}
+	if len(iv) != blockSize {
+		return nil, fmt.Errorf("invalid iv length: %d, must be %d bytes", len(iv), blockSize)
 	}
 
 	blockMode := cipher.NewCBCDecrypter(block, iv)
@@ -99,6 +122,9 @@ func AesDecrypt(cryptedText, key, iv []byte) ([]byte, error) {
 	plainText := make([]byte, len(cryptedText))
 	blockMode.CryptBlocks(plainText, cryptedText)
 	plainText = PKCS5UnPadding(plainText)
+	if plainText == nil {
+		return nil, fmt.Errorf("invalid PKCS#5 padding")
+	}
 	return plainText, nil
 }
 
