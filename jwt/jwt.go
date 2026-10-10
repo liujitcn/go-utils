@@ -97,6 +97,12 @@ func GenerateJWT(mapClaims jwt.MapClaims, secretKey []byte, signingMethod jwt.Si
 	if len(secretKey) == 0 {
 		return "", fmt.Errorf("secret key cannot be empty")
 	}
+	if signingMethod == nil {
+		return "", fmt.Errorf("signing method cannot be nil")
+	}
+	if mapClaims == nil {
+		return "", fmt.Errorf("claims cannot be nil")
+	}
 
 	// 创建一个新的 JWT Token
 	token := jwt.NewWithClaims(signingMethod, mapClaims)
@@ -116,11 +122,17 @@ func GenerateGenericJWT[T any](payload T, secretKey []byte, signingMethod jwt.Si
 	if len(secretKey) == 0 {
 		return "", fmt.Errorf("secret key cannot be empty")
 	}
+	if signingMethod == nil {
+		return "", fmt.Errorf("signing method cannot be nil")
+	}
 
 	// 将泛型 payload 转换为 jwt.MapClaims
 	claimsMap, err := ToMapClaims(payload)
 	if err != nil {
 		return "", fmt.Errorf("failed to convert payload to claims: %v", err)
+	}
+	if claimsMap == nil {
+		return "", fmt.Errorf("payload must encode to a JSON object")
 	}
 
 	// 创建一个新的 JWT Token
@@ -154,10 +166,30 @@ func ToMapClaims[T any](payload T) (jwt.MapClaims, error) {
 
 // RefreshJWT 刷新JWT
 func RefreshJWT(tokenString string, secretKey []byte, newExpiration time.Time) (string, error) {
-	// 解析 JWT 的 payload
-	claims, err := ParseJWTPayload(tokenString)
+	if len(secretKey) == 0 {
+		return "", fmt.Errorf("secret key cannot be empty")
+	}
+	// 校验签名但允许已过期 token 续期，避免对未验证的 payload 重新签名。
+	parser := jwt.NewParser(
+		jwt.WithoutClaimsValidation(),
+		jwt.WithValidMethods([]string{
+			jwt.SigningMethodHS256.Alg(),
+			jwt.SigningMethodHS384.Alg(),
+			jwt.SigningMethodHS512.Alg(),
+		}),
+	)
+	token, err := parser.Parse(tokenString, func(token *jwt.Token) (any, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return secretKey, nil
+	})
 	if err != nil {
 		return "", err
+	}
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok || !token.Valid {
+		return "", fmt.Errorf("invalid token")
 	}
 
 	// 更新过期时间
@@ -177,6 +209,12 @@ func GenerateJWTWithHeader(payload jwt.MapClaims, secretKey []byte, signingMetho
 	// 检查密钥是否为空
 	if len(secretKey) == 0 {
 		return "", fmt.Errorf("secret key cannot be empty")
+	}
+	if signingMethod == nil {
+		return "", fmt.Errorf("signing method cannot be nil")
+	}
+	if payload == nil {
+		return "", fmt.Errorf("payload cannot be nil")
 	}
 
 	// 创建一个新的 JWT Token
@@ -220,6 +258,12 @@ func GenerateShortLivedJWT(payload jwt.MapClaims, secretKey []byte, signingMetho
 	// 检查密钥是否为空
 	if len(secretKey) == 0 {
 		return "", fmt.Errorf("secret key cannot be empty")
+	}
+	if payload == nil {
+		return "", fmt.Errorf("payload cannot be nil")
+	}
+	if signingMethod == nil {
+		return "", fmt.Errorf("signing method cannot be nil")
 	}
 
 	// 设置过期时间
@@ -298,6 +342,9 @@ func IsJWTExpired(tokenString string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+	if exp == nil {
+		return false, nil
+	}
 
 	// 检查当前时间是否超过 `exp`
 	if time.Now().After(exp.Time) {
@@ -351,6 +398,9 @@ func GetJWTIssuedAt(tokenString string) (*time.Time, error) {
 	iat, err := claims.GetIssuedAt()
 	if err != nil {
 		return nil, err
+	}
+	if iat == nil {
+		return nil, nil
 	}
 
 	return &iat.Time, nil
