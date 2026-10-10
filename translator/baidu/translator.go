@@ -1,4 +1,3 @@
-// Package baidu 提供百度通用文本翻译适配器。
 package baidu
 
 import (
@@ -63,16 +62,16 @@ func (translator *Translator) Translate(
 		return "", err
 	}
 	if source == "" {
-		return "", fmt.Errorf("Baidu translate: source cannot be empty")
+		return "", fmt.Errorf("baidu translate: source cannot be empty")
 	}
 	if translator.appID == "" || translator.secretKey == "" {
-		return "", fmt.Errorf("Baidu translate: app ID and secret key are required")
+		return "", fmt.Errorf("baidu translate: app ID and secret key are required")
 	}
 
 	var salt string
 	salt, err = newSalt()
 	if err != nil {
-		return "", fmt.Errorf("Baidu translate: generate salt: %w", err)
+		return "", fmt.Errorf("baidu translate: generate salt: %w", err)
 	}
 
 	form := url.Values{}
@@ -92,25 +91,25 @@ func (translator *Translator) Translate(
 		httputil.WithFormBody(form),
 	)
 	if err != nil {
-		return "", fmt.Errorf("Baidu translate: send request: %w", err)
+		return "", fmt.Errorf("baidu translate: send request: %w", err)
 	}
 	if len(response.Body) > maxResponseSize {
-		return "", fmt.Errorf("Baidu translate: response exceeds %d bytes", maxResponseSize)
+		return "", fmt.Errorf("baidu translate: response exceeds %d bytes", maxResponseSize)
 	}
 	if response.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("Baidu translate: HTTP status %d", response.StatusCode)
+		return "", fmt.Errorf("baidu translate: HTTP status %d", response.StatusCode)
 	}
 
 	var result baiduResponse
 	err = json.Unmarshal(response.Body, &result)
 	if err != nil {
-		return "", fmt.Errorf("Baidu translate: decode response: %w", err)
+		return "", fmt.Errorf("baidu translate: decode response: %w", err)
 	}
 	if result.ErrorCode != "" {
-		return "", fmt.Errorf("Baidu translate: code=%s, message=%s", result.ErrorCode, result.ErrorMsg)
+		return "", fmt.Errorf("baidu translate: code=%s, message=%s", result.ErrorCode, result.ErrorMsg)
 	}
 	if len(result.TransResult) == 0 {
-		return "", fmt.Errorf("Baidu translate: empty translation")
+		return "", fmt.Errorf("baidu translate: empty translation")
 	}
 
 	translations := make([]string, 0, len(result.TransResult))
