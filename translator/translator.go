@@ -1,4 +1,3 @@
-// Package translator 定义文本翻译模块的公共接口。
 package translator
 
 import "context"
