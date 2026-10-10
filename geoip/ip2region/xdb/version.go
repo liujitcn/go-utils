@@ -1,7 +1,3 @@
-// Copyright 2022 The Ip2Region Authors. All rights reserved.
-// Use of this source code is governed by a Apache2.0-style
-// license that can be found in the LICENSE file.
-
 package xdb
 
 import (
@@ -41,11 +37,18 @@ var (
 		Bytes:            4,
 		SegmentIndexSize: 14, // 4 + 4 + 2 + 4,
 		IPCompare: func(ip1, ip2 []byte) int {
-			// ip1 - with Big endian byte order parsed from an input
-			// ip2 - with Little endian byte order read from the xdb index
-			ip2[0], ip2[3] = ip2[3], ip2[0]
-			ip2[1], ip2[2] = ip2[2], ip2[1]
-			return bytes.Compare(ip1, ip2)
+			if len(ip1) != 4 || len(ip2) != 4 {
+				return bytes.Compare(ip1, ip2)
+			}
+			for i := range ip1 {
+				if ip1[i] < ip2[len(ip2)-1-i] {
+					return -1
+				}
+				if ip1[i] > ip2[len(ip2)-1-i] {
+					return 1
+				}
+			}
+			return 0
 		},
 	}
 	IPv6 = &Version{
@@ -87,6 +90,10 @@ func VersionFromName(name string) (*Version, error) {
 
 // VersionFromHeader 根据数据库头信息解析 IP 版本。
 func VersionFromHeader(header *Header) (*Version, error) {
+	if header == nil {
+		return IPvx, fmt.Errorf("header is nil")
+	}
+
 	// old structure with IPv4 supports ONLY
 	if header.Version == Structure20 {
 		return IPv4, nil
@@ -94,7 +101,7 @@ func VersionFromHeader(header *Header) (*Version, error) {
 
 	// structure 3.0 after IPv6 supporting
 	if header.Version != Structure30 {
-		return IPvx, fmt.Errorf("invalid version `%d`", header.IPVersion)
+		return IPvx, fmt.Errorf("invalid structure version `%d`", header.Version)
 	}
 
 	switch header.IPVersion {
@@ -103,6 +110,6 @@ func VersionFromHeader(header *Header) (*Version, error) {
 	case IPv6VersionNo:
 		return IPv6, nil
 	default:
-		return IPvx, fmt.Errorf("invalid version `%d`", header.Version)
+		return IPvx, fmt.Errorf("invalid IP version `%d`", header.IPVersion)
 	}
 }

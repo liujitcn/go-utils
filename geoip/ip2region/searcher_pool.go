@@ -2,6 +2,7 @@ package ip2region
 
 import (
 	"fmt"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -20,10 +21,14 @@ type SearcherPool struct {
 
 	// searcher number that was loaned out
 	loanCount int32
+	closeOnce sync.Once
 }
 
 // NewSearcherPool 创建搜索器池。
 func NewSearcherPool(config *Config) (*SearcherPool, error) {
+	if config == nil {
+		return nil, fmt.Errorf("config cannot be nil")
+	}
 	if config.searchers < 1 {
 		return nil, fmt.Errorf("config.searchers must > 0")
 	}
@@ -85,13 +90,17 @@ func (sp *SearcherPool) Close() {
 
 // CloseTimeout 在指定超时时间内关闭搜索器池。
 func (sp *SearcherPool) CloseTimeout(d time.Duration) {
-	close(sp.closing)
+	sp.closeOnce.Do(func() {
+		close(sp.closing)
+	})
+	timer := time.NewTimer(d)
+	defer timer.Stop()
 	for {
 		timeout := false
 		select {
 		case s := <-sp.pool:
 			s.Close()
-		case <-time.After(d):
+		case <-timer.C:
 			// check if all the loaned searchers was closed
 			timeout = true
 		}

@@ -41,6 +41,7 @@ func (g *Client) Close() {
 
 // Query 查询指定 IP 的归属地信息。
 func (g *Client) Query(rawIP string) (ret geoip.Result, err error) {
+	ret.IP = rawIP
 	regionData, err := g.ip2region.SearchByStr(rawIP)
 	if err != nil {
 		return ret, err

@@ -52,6 +52,9 @@ func NewV6Config(cachePolicy int, xdbContent []byte, searchers int) (*Config, er
 
 // newConfig 创建指定 IP 版本的查询配置。
 func newConfig(cachePolicy int, ipVersion *xdb.Version, xdbContent []byte, searchers int) (*Config, error) {
+	if cachePolicy != NoCache && cachePolicy != VIndexCache && cachePolicy != BufferCache {
+		return nil, fmt.Errorf("invalid cache policy: %d", cachePolicy)
+	}
 	if searchers < 1 {
 		return nil, fmt.Errorf("searchers=%d, > 0 expected", searchers)
 	}

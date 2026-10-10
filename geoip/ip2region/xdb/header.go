@@ -1,14 +1,3 @@
-// Copyright 2022 The Ip2Region Authors. All rights reserved.
-// Use of this source code is governed by a Apache2.0-style
-// license that can be found in the LICENSE file.
-
-// ---
-// Ip2Region database v2.0 searcher.
-// @Note this is a Not thread safe implementation.
-//
-// @Author Lion <chenxin619315@gmail.com>
-// @Date   2025/12/03
-
 package xdb
 
 import (
@@ -63,19 +52,18 @@ type Header struct {
 
 // NewHeader 从字节缓冲区解析数据库头信息。
 func NewHeader(input []byte) (*Header, error) {
-	if len(input) < 16 {
+	if len(input) < 20 {
 		return nil, fmt.Errorf("invalid input buffer")
 	}
 
 	return &Header{
-		Version:       binary.LittleEndian.Uint16(input[0:]),
-		IndexPolicy:   IndexPolicy(binary.LittleEndian.Uint16(input[2:])),
-		CreatedAt:     binary.LittleEndian.Uint32(input[4:]),
-		StartIndexPtr: binary.LittleEndian.Uint32(input[8:]),
-		EndIndexPtr:   binary.LittleEndian.Uint32(input[12:]),
-
+		Version:         binary.LittleEndian.Uint16(input[0:2]),
+		IndexPolicy:     IndexPolicy(binary.LittleEndian.Uint16(input[2:4])),
+		CreatedAt:       binary.LittleEndian.Uint32(input[4:8]),
+		StartIndexPtr:   binary.LittleEndian.Uint32(input[8:12]),
+		EndIndexPtr:     binary.LittleEndian.Uint32(input[12:16]),
 		IPVersion:       int(binary.LittleEndian.Uint16(input[16:])),
-		RuntimePtrBytes: int(binary.LittleEndian.Uint16(input[18:])),
+		RuntimePtrBytes: int(binary.LittleEndian.Uint16(input[18:20])),
 	}, nil
 }
 

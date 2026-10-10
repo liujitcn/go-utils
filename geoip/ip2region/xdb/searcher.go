@@ -1,14 +1,3 @@
-// Copyright 2022 The Ip2Region Authors. All rights reserved.
-// Use of this source code is governed by a Apache2.0-style
-// license that can be found in the LICENSE file.
-
-// ---
-// Ip2Region database v2.0 searcher.
-// @Note this is a Not thread safe implementation.
-//
-// @Author Lion <chenxin619315@gmail.com>
-// @Date   2022/06/16
-
 package xdb
 
 import (
@@ -38,6 +27,19 @@ func NewWithBuffer(version *Version, cBuff []byte) (*Searcher, error) {
 
 // NewSearcher 根据索引与内容缓冲区创建搜索器。
 func NewSearcher(version *Version, vIndex []byte, cBuff []byte) (*Searcher, error) {
+	if version == nil || (version.Bytes != 4 && version.Bytes != 16) || version.SegmentIndexSize < version.Bytes*2+6 || version.IPCompare == nil {
+		return nil, fmt.Errorf("invalid IP version configuration")
+	}
+	if cBuff == nil && vIndex == nil {
+		return nil, fmt.Errorf("searcher requires an index or content buffer")
+	}
+	if vIndex != nil && len(vIndex) < VectorIndexRows*VectorIndexCols*VectorIndexSize {
+		return nil, fmt.Errorf("vector index buffer is too small")
+	}
+	if cBuff != nil && len(cBuff) < HeaderInfoLength+VectorIndexRows*VectorIndexCols*VectorIndexSize {
+		return nil, fmt.Errorf("content buffer is too small")
+	}
+
 	// content buff first
 	if cBuff != nil {
 		return &Searcher{
@@ -77,8 +79,12 @@ func (s *Searcher) SearchByStr(str string) (string, error) {
 	return s.Search(ip)
 }
 
-// Search find the region for the specified long ip
+// Search 根据 IP 字节切片查询归属地信息。
 func (s *Searcher) Search(ip []byte) (string, error) {
+	if s == nil || s.version == nil {
+		return "", fmt.Errorf("searcher is not initialized")
+	}
+
 	// ip version check
 	if len(ip) != s.version.Bytes {
 		return "", fmt.Errorf("invalid ip address(%s expected)", s.version.Name)
@@ -90,11 +96,17 @@ func (s *Searcher) Search(ip []byte) (string, error) {
 	// locate the segment index block based on the vector index
 	var il0, il1 = int(ip[0]), int(ip[1])
 	var idx = il0*VectorIndexCols*VectorIndexSize + il1*VectorIndexSize
-	var sPtr, ePtr = uint32(0), uint32(0)
+	var sPtr, ePtr uint32
 	if s.vectorIndex != nil {
+		if idx+VectorIndexSize > len(s.vectorIndex) {
+			return "", fmt.Errorf("vector index offset %d is out of range", idx)
+		}
 		sPtr = binary.LittleEndian.Uint32(s.vectorIndex[idx:])
 		ePtr = binary.LittleEndian.Uint32(s.vectorIndex[idx+4:])
 	} else if s.contentBuff != nil {
+		if HeaderInfoLength+idx+VectorIndexSize > len(s.contentBuff) {
+			return "", fmt.Errorf("vector index offset %d is out of range", idx)
+		}
 		sPtr = binary.LittleEndian.Uint32(s.contentBuff[HeaderInfoLength+idx:])
 		ePtr = binary.LittleEndian.Uint32(s.contentBuff[HeaderInfoLength+idx+4:])
 	} else {
@@ -114,6 +126,12 @@ func (s *Searcher) Search(ip []byte) (string, error) {
 	// binary search the segment index to get the region
 	var bytes, dBytes = len(ip), len(ip) << 1
 	var segIndexSize = uint32(s.version.SegmentIndexSize)
+	if segIndexSize < uint32(dBytes+6) {
+		return "", fmt.Errorf("invalid segment index size: %d", segIndexSize)
+	}
+	if ePtr < sPtr || (ePtr-sPtr)%segIndexSize != 0 {
+		return "", fmt.Errorf("invalid segment index range: %d-%d", sPtr, ePtr)
+	}
 	var dataLen, dataPtr = 0, uint32(0)
 	var buff = make([]byte, segIndexSize)
 	var l, h = 0, int((ePtr - sPtr) / segIndexSize)
@@ -152,15 +170,14 @@ func (s *Searcher) Search(ip []byte) (string, error) {
 	return string(regionBuff), nil
 }
 
-// do the data read operation based on the setting.
-// content buffer first or will read from the file.
-// this operation will invoke the Seek for file based read.
+// read 从内容缓冲区读取指定范围的数据。
 func (s *Searcher) read(offset int64, buff []byte) error {
 	if s.contentBuff != nil {
-		cLen := copy(buff, s.contentBuff[offset:])
-		if cLen != len(buff) {
-			return fmt.Errorf("incomplete read: readed bytes should be %d", len(buff))
+		if offset < 0 || offset > int64(len(s.contentBuff)) || int64(len(buff)) > int64(len(s.contentBuff))-offset {
+			return fmt.Errorf("read range %d-%d is out of bounds", offset, offset+int64(len(buff)))
 		}
+		copy(buff, s.contentBuff[int(offset):int(offset)+len(buff)])
+		return nil
 	}
-	return nil
+	return fmt.Errorf("searcher has no content buffer")
 }

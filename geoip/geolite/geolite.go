@@ -48,6 +48,7 @@ func (g *Client) query(ip net.IP) (city *geoip2.City, err error) {
 
 // Query 通过IP获取地区
 func (g *Client) Query(rawIP string) (ret geoip.Result, err error) {
+	ret.IP = rawIP
 	ip := net.ParseIP(rawIP)
 	if ip == nil {
 		return ret, errors.New("invalid ip address")

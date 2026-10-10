@@ -1,11 +1,3 @@
-// Copyright 2022 The Ip2Region Authors. All rights reserved.
-// Use of this source code is governed by a Apache2.0-style
-// license that can be found in the LICENSE file.
-
-// ---
-// @Author Lion <chenxin619315@gmail.com>
-// @Date   2022/06/16
-
 package xdb
 
 import (
@@ -83,8 +75,11 @@ func IPSubOne(ip []byte) []byte {
 	return r
 }
 
-// LoadHeaderFromBuff wrap the header info from the content buffer
+// LoadHeaderFromBuff 从内容缓冲区加载数据库头信息。
 func LoadHeaderFromBuff(cBuff []byte) (*Header, error) {
+	if len(cBuff) < HeaderInfoLength {
+		return nil, fmt.Errorf("buffer too small: need %d bytes, got %d", HeaderInfoLength, len(cBuff))
+	}
 	return NewHeader(cBuff[0:HeaderInfoLength])
 }
 

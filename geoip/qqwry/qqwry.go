@@ -5,7 +5,6 @@ import (
 	"errors"
 	"net"
 	"strings"
-	"sync"
 
 	"github.com/liujitcn/go-utils/geoip"
 
@@ -13,10 +12,6 @@ import (
 )
 
 type Client struct {
-	data    []byte
-	dataLen uint32
-	ipCache sync.Map
-
 	IPNum int64
 
 	startPos uint32
@@ -25,9 +20,7 @@ type Client struct {
 
 // NewClient 创建 QQWry 客户端。
 func NewClient() *Client {
-	cli := &Client{
-		ipCache: sync.Map{},
-	}
+	cli := &Client{}
 
 	cli.init()
 
@@ -59,11 +52,17 @@ func (c *Client) readHeader() (uint32, uint32) {
 
 // readMode 获取偏移值类型
 func (c *Client) readMode(offset uint32) byte {
+	if offset >= uint32(len(assets.QQWryDat)) {
+		return 0
+	}
 	return assets.QQWryDat[offset]
 }
 
 // readIpRecord 读取IP记录 前4字节：起始IP，后3字节：偏移量
 func (c *Client) readIpRecord(offset uint32) (ip32 uint32, ipOffset uint32) {
+	if offset > uint32(len(assets.QQWryDat)) || uint32(len(assets.QQWryDat))-offset < ipRecordLength {
+		return 0, 0
+	}
 	buf := assets.QQWryDat[offset : offset+ipRecordLength]
 	ip32 = binary.LittleEndian.Uint32(buf[:4])
 	ipOffset = byte3ToUInt32(buf[4:])
@@ -72,6 +71,10 @@ func (c *Client) readIpRecord(offset uint32) (ip32 uint32, ipOffset uint32) {
 
 // locateIP 定位IP
 func (c *Client) locateIP(ip32 uint32) int32 {
+	if c.endPos < c.startPos || c.endPos-c.startPos < ipRecordLength || c.endPos >= uint32(len(assets.QQWryDat)) {
+		return 0
+	}
+
 	var _ip32 uint32
 	var _ipOffset uint32
 	var offset uint32
@@ -85,8 +88,8 @@ func (c *Client) locateIP(ip32 uint32) int32 {
 
 		if j-i == ipRecordLength {
 			offset = _ipOffset
-			_ip32, _ipOffset = c.readIpRecord(mid + ipRecordLength)
-			if ip32 < _ip32 {
+			nextIP, _ := c.readIpRecord(mid + ipRecordLength)
+			if ip32 < nextIP {
 				break
 			} else {
 				offset = 0
@@ -107,22 +110,11 @@ func (c *Client) locateIP(ip32 uint32) int32 {
 	return int32(offset)
 }
 
-// readArea 读取区域
-func (c *Client) readArea(offset uint32) []byte {
-	mode := c.readMode(offset)
-	if mode == redirectMode1 || mode == redirectMode2 {
-		areaOffset := c.readUInt24(int32(offset) + 1)
-		if areaOffset == 0 {
-			return []byte{}
-		}
-		return c.readString(areaOffset)
-	}
-
-	return c.readString(offset)
-}
-
 // readString 获取字符串
 func (c *Client) readString(offset uint32) []byte {
+	if offset >= uint32(len(assets.QQWryDat)) {
+		return nil
+	}
 	data := make([]byte, 0, 30)
 	for i := offset; i < uint32(len(assets.QQWryDat)); i++ {
 		if assets.QQWryDat[i] == 0 {
@@ -135,6 +127,9 @@ func (c *Client) readString(offset uint32) []byte {
 
 // readUInt24 读取 3 字节无符号整数。
 func (c *Client) readUInt24(offset int32) uint32 {
+	if offset < 0 || int64(offset)+3 > int64(len(assets.QQWryDat)) {
+		return 0
+	}
 	i := uint32(assets.QQWryDat[offset+0]) & 0xFF
 	i |= (uint32(assets.QQWryDat[offset+1]) << 8) & 0xFF00
 	i |= (uint32(assets.QQWryDat[offset+2]) << 16) & 0xFF0000
@@ -184,7 +179,7 @@ func (c *Client) Query(queryIp string) (res geoip.Result, err error) {
 		}
 		_area = c.readString(posCA)
 		if mode != redirectMode2 {
-			posC += uint32(len(area) + 1)
+			posC += uint32(len(_area) + 1)
 		}
 		ispPos = posC
 
@@ -196,7 +191,7 @@ func (c *Client) Query(queryIp string) (res geoip.Result, err error) {
 	default:
 		posCA := offset + 0
 		_area = c.readString(uint32(posCA))
-		ispPos = uint32(offset) + uint32(len(area)) + 1
+		ispPos = uint32(offset) + uint32(len(_area)) + 1
 	}
 
 	if len(_area) != 0 {
@@ -213,13 +208,15 @@ func (c *Client) Query(queryIp string) (res geoip.Result, err error) {
 		}
 	}
 
+	if ispPos >= uint32(len(assets.QQWryDat)) {
+		return res, errors.New("invalid ISP offset")
+	}
 	ispMode := assets.QQWryDat[ispPos]
 	if ispMode == redirectMode1 || ispMode == redirectMode2 {
 		ispPos = c.readUInt24(int32(ispPos + 1))
 	}
 	if ispPos > 0 {
-		var _isp []byte
-		_isp = c.readString(ispPos)
+		_isp := c.readString(ispPos)
 		res.ISP = strings.TrimSpace(gb18030Decode(_isp))
 		if res.ISP != "" {
 			if strings.Contains(res.ISP, "CZ88.NET") {
