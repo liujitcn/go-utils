@@ -1,4 +1,3 @@
-// Package alibaba 提供阿里云机器翻译适配器。
 package alibaba
 
 import (
@@ -70,7 +69,7 @@ func (translator *Translator) Translate(
 		return "", err
 	}
 	if source == "" {
-		return "", fmt.Errorf("Alibaba translate: source cannot be empty")
+		return "", fmt.Errorf("alibaba translate: source cannot be empty")
 	}
 
 	request := &alimt.TranslateGeneralRequest{
@@ -97,24 +96,24 @@ func (translator *Translator) Translate(
 	var response *alimt.TranslateGeneralResponse
 	response, err = translator.client.TranslateGeneralWithOptions(request, runtime)
 	if err != nil {
-		return "", fmt.Errorf("Alibaba translate: %w", err)
+		return "", fmt.Errorf("alibaba translate: %w", err)
 	}
 	err = ctx.Err()
 	if err != nil {
 		return "", err
 	}
 	if response == nil || response.Body == nil {
-		return "", fmt.Errorf("Alibaba translate: empty response")
+		return "", fmt.Errorf("alibaba translate: empty response")
 	}
 	if response.Body.Code != nil && tea.Int32Value(response.Body.Code) != 200 {
 		return "", fmt.Errorf(
-			"Alibaba translate: code=%d, message=%s",
+			"alibaba translate: code=%d, message=%s",
 			tea.Int32Value(response.Body.Code),
 			tea.StringValue(response.Body.Message),
 		)
 	}
 	if response.Body.Data == nil || response.Body.Data.Translated == nil {
-		return "", fmt.Errorf("Alibaba translate: empty translation")
+		return "", fmt.Errorf("alibaba translate: empty translation")
 	}
 
 	return tea.StringValue(response.Body.Data.Translated), nil
