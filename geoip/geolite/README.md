@@ -1,12 +1,39 @@
-# GEOIP2（GeoLite2）
+# GeoLite2 城市查询
 
-GeoLite2数据库是免费的IP地理位置数据库，它可以通过IP地址识别其所在的城市和国家。与MaxMind的GeoIP2数据库相比，准确性较差。
+geoip/geolite 使用包内嵌的 GeoLite2 City 数据，支持 IPv4 和 IPv6。返回国家、省份、城市和 IP 字段；运营商字段通常为空。
 
-GeoLite2-*.mmdb文件是一个二进制数据库文件，包含了MaxMind GeoLite2所需的全部数据。
+## 安装
 
-GeoLite2的数据库分为：国家(Country)，城市(City)和ASN三个数据库。每周两次更新。
+~~~bash
+go get github.com/liujitcn/go-utils/geoip@latest
+~~~
 
-## 数据库下载地址
+## 使用
 
-1. <https://github.com/P3TERX/GeoLite.mmdb/releases>
-2. <https://dev.maxmind.com/geoip/geolite2-free-geolocation-data>
+~~~go
+package main
+
+import (
+	"fmt"
+
+	"github.com/liujitcn/go-utils/geoip/geolite"
+)
+
+func main() {
+	client, err := geolite.NewClient()
+	if err != nil {
+		panic(err)
+	}
+	defer client.Close()
+
+	result, err := client.Query("8.8.8.8")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("%s %s %s\n", result.Country, result.Province, result.City)
+}
+~~~
+
+NewClient 从内嵌数据库创建读取器；查询结束后调用 Close 释放资源。数据库默认使用 zh-CN 名称，可通过 SetLanguage 设置 GeoLite2 中存在的其他语言代码。
+
+私网地址不会查询数据库，而是将国家、省份和城市均返回为“局域网”。无效 IP 会返回错误。

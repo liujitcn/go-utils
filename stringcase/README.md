@@ -1,84 +1,49 @@
-# 命名法转换
+# stringcase
 
-## Go 标识符
+stringcase 提供 Go 标识符和常见分隔符命名转换，同时提供通用字符串拆分和判断函数。
 
-`ToGoPascalCase` 和 `ToGoCamelCase` 会保留 `API`、`ID`、`URL`、`UUID` 等常见 Go 缩写的大写形式。例如，`base_api` 分别转换为 `BaseAPI` 和 `baseAPI`。可通过只读的 `CommonAbbreviations` 查询当前缩写规则。
+## 安装
 
-- camelCase 驼峰式命名法（大驼峰）
-- PascalCase 帕斯卡命名法（小驼峰）
-- snake_case 蛇形命名法
-- kebab-case 烤肉串命名法
+~~~bash
+go get github.com/liujitcn/go-utils/stringcase@latest
+~~~
 
-## camelCase 驼峰式命名法（大驼峰）
+## 命名转换
 
-驼峰式命名法（Camel case）是一种不使用空格，将多个单词连起来形成一个标识符的命名方式，其中每个单词的首字母（除了第一个单词，如果使用小驼峰式命名法）都大写，就像骆驼的驼峰一样。
+| 函数 | 输出 |
+| --- | --- |
+| UpperCamelCase、PascalCase、ToPascalCase | 大驼峰，例如 UserProfile |
+| LowerCamelCase、CamelCase、ToCamelCase | 小驼峰，例如 userProfile |
+| ToGoPascalCase | 大驼峰，并把 API、ID、URL、UUID 等常见缩写保持为全大写 |
+| ToGoCamelCase | 小驼峰，并保持常见缩写规则 |
+| SnakeCase、ToSnakeCase | 小写蛇形，例如 user_profile |
+| UpperSnakeCase | 大写蛇形，例如 USER_PROFILE |
+| KebabCase | 小写短横线，例如 user-profile |
+| UpperKebabCase | 大写短横线，例如 USER-PROFILE |
 
-驼峰式命名法分为两种：首字母小写的“小驼峰式”（lowerCamelCase）和首字母大写的“大驼峰式”（UpperCamelCase，也称为帕斯卡命名法PascalCase）。
+~~~go
+fmt.Println(stringcase.ToGoPascalCase("base_api_id")) // BaseAPIID
+fmt.Println(stringcase.ToGoCamelCase("base_api_id"))   // baseAPIID
+fmt.Println(stringcase.SnakeCase("UserProfile"))       // user_profile
+fmt.Println(stringcase.KebabCase("UserProfile"))       // user-profile
+~~~
 
-- **小驼峰式(lowerCamelCase)**: 第一个单词的首字母小写，后续单词的首字母大写。例如：`myVariableName`。
-- **大驼峰式(UpperCamelCase)**: 每个单词的首字母都大写。例如：MyVariableName，也称为帕斯卡命名法（PascalCase）。
+CommonAbbreviations 是只读语义上的缩写集合，可通过 Contains 查询某个单词是否属于当前规则。集合的底层 map 不应被修改。
 
-在 JavaScript、Java和C#中，驼峰式大小写常用于变量和函数的命名。
+## 拆分与清洗
 
-```javascript
-let firstName = "John";
-let lastName = "Doe";
+- Split 按驼峰、数字和分隔符拆分字符串；通过 noSplit 参数可以保留不拆分的词。
+- SplitByNonAlphanumeric 按非字母数字字符拆分。
+- SplitAndKeepDelimiters 拆分字符串并保留分隔符。
+- ReplaceNonAlphanumeric 将连续的非字母数字字符替换为指定字符串。
+- IsSnakeCase 判断字符串是否符合小写蛇形规则。
+- ContainsFn 使用自定义比较函数判断切片是否包含指定值。
 
-function printFullName(firstName, lastName) {
-    let fullName = firstName + " " + lastName;
-    console.log(fullName);
-}
-```
+~~~go
+parts := stringcase.Split("HTTPServerV2", "HTTP")
+clean := stringcase.ReplaceNonAlphanumeric("user/profile", "-")
+valid := stringcase.IsSnakeCase("user_profile")
+fmt.Println(parts, clean, valid)
+~~~
 
-## PascalCase 帕斯卡命名法（小驼峰）
-
-`PascalCase`，也称为`UpperCamelCase`，是一种在编程中使用的命名约定。它要求每个单词（包括第一个单词）的首字母都大写，并且单词之间没有空格或分隔符（如
-`_`）。例如，`ThisIsPascalCase`，`MyClassName` 都是使用PascalCase的例子。
-
-PascalCase 通常用于在 C#、Java 和TypeScript等语言中命名类、接口和其他类型。
-
-```typescript
-class Person {
-    firstName: string;
-    lastName: string;
-
-    constructor(firstName: string, lastName: string) {
-        this.firstName = firstName;
-        this.lastName = lastName;
-    }
-
-    printFullName(): void {
-        let fullName = this.firstName + " " + this.lastName;
-        console.log(fullName);
-    }
-}
-```
-
-## snake_case 蛇形命名法
-
-蛇形命名法是一种使用下划线 (`_`) 分隔单词的命名方式。之所以叫蛇形命名法，是因为"`snake_case`"的
-下划线的形状类似于蛇腹上的鳞片。蛇形命名法通常用于Python、Ruby 和JavaScript等语言的变量名和函数名。
-
-```python
-first_name = "John"
-last_name = "Doe"
-
-def print_full_name(first_name, last_name):
-    full_name = first_name + " " + last_name
-    print(full_name)
-```
-
-## kebab-case 烤肉串命名法
-
-`kebab-case（烤肉串命名法）`，也被称作 `kebab case`、`dash-case（破折号式）`、`hyphen-case（连字符式）`、`lisp-case（Lisp 式）`。
-
-kebab-case 要求短语内的各个单词或缩写之间以`-`（连字符）做间隔。 例如："`kebab-case`"。
-
-短横线命名法通常用于 URL、文件名和 HTML/CSS 类名。
-
-```html
-
-<div class="user-profile">
-    <p>This is a user profile.</p>
-</div>
-```
+空字符串和无效 UTF-8 的拆分结果遵循 Split 的当前实现行为；命名转换不会替调用方做业务语义判断，缩写和边界词应通过示例验证。

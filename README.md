@@ -1,50 +1,59 @@
 # go-utils
 
-`go-utils` 是一个通用 Go 工具库，覆盖常用的 ID 生成、时间处理、集合操作、字符串转换、文件路径与 TLS/JWT/密码学能力。
-
-项目要求 Go 1.27，基础切片与 map 操作优先使用标准库 `slices`、`maps`，指针构造优先使用 Go 1.26 引入的 `new(expr)`。
+`go-utils` 是面向 Go 业务服务的通用工具库，按功能拆分为多个可独立引入的包和子模块。项目要求 Go 1.27。
 
 ## 安装
 
+根模块和独立子模块需要按实际使用的导入路径安装：
+
 ```bash
 go get github.com/liujitcn/go-utils@latest
+go get github.com/liujitcn/go-utils/crypto@latest
+go get github.com/liujitcn/go-utils/jwt@latest
 ```
 
-初始化开发环境执行 `make init`；本仓库没有额外生成插件，目标只安装 `goimports`。
-
-Go import 别名规范化命令由 `kratos-kit` 提供，可从任意目录安装后执行：
+本地开发可以在仓库根目录执行：
 
 ```bash
-make cli
-make fmt
+make init  # 安装格式化相关命令
+make fmt   # 整理 Go 导入和代码格式
 ```
 
-`make cli` 会安装规范化命令，`make fmt` 再运行规范化命令并执行 `goimports`。
+## 功能索引
 
-## 模块结构
+### 根模块
 
-- `github.com/liujitcn/go-utils`：根模块，具体能力按子包引入
-- `github.com/liujitcn/go-utils/byte`：`int` 与 `[]byte` 转换、ASCII 大小写字节转换
-- `github.com/liujitcn/go-utils/crypto`：密码学工具（独立子模块）
-- `github.com/liujitcn/go-utils/geoip`：IP 地理位置查询（GeoLite2 / 纯真 / IP2Region）
-- `github.com/liujitcn/go-utils/http`：基于 options 模式的通用 HTTP 请求客户端，支持普通响应体大小限制
-- `github.com/liujitcn/go-utils/id`：Snowflake、UUIDv4/v7、XID
-- `github.com/liujitcn/go-utils/io`：文件读取、路径匹配、文件属性判断
-- `github.com/liujitcn/go-utils/jwt`：JWT 生成/解析/校验（独立子模块）
-- `github.com/liujitcn/go-utils/map`：泛型 map 合并、遍历、过滤工具（键值提取和复制请使用标准库 `maps`）
-- `github.com/liujitcn/go-utils/mapper`：DTO 与实体互转，默认复用 `time` 包内置 `time.Time <-> string` 转换
-- `github.com/liujitcn/go-utils/set`：泛型 set 集合工具，提供对齐 `golang-set/v2` v2.8.0 的接口与线程安全/非线程安全实现
-- `github.com/liujitcn/go-utils/slice`：泛型 slice 高阶操作工具（基础查找、复制、插入、删除和分块请使用标准库 `slices`）
-- `github.com/liujitcn/go-utils/string`：字符串与 JSON 数组转换、脱敏、随机数字串
-- `github.com/liujitcn/go-utils/stringcase`：大小驼峰、蛇形、短横线等命名转换
-- `github.com/liujitcn/go-utils/time`：时间格式化、区间、差值、protobuf 时间转换
-- `github.com/liujitcn/go-utils/tls`：TLS 配置加载（文件/内存）
-- `github.com/liujitcn/go-utils/trans`：值与指针/切片互转（指针构造请优先使用 Go 1.26 的 `new(expr)`）
-- `github.com/liujitcn/go-utils/translator`：统一文本翻译接口，以及 Alibaba、Baidu、Google、Volc 独立 Provider
+根模块不包含业务状态，提供以下通用包：
+
+| 包 | 功能 |
+| --- | --- |
+| `byte` | `int` 与大端 `[]byte` 互转、ASCII 字节大小写转换 |
+| `id` | Snowflake、UUID v4/v7、短 UUID、XID 生成及 Snowflake 时间提取 |
+| `ip` | 从代理请求头或 `RemoteAddr` 提取客户端 IP |
+| `io` | 文件读取、目录遍历、路径匹配、用户目录展开、文件状态和权限判断 |
+| `map` | 泛型 map 合并、遍历、过滤和删除键 |
+| `mapper` | DTO 与实体双向复制，以及时间、JSON、枚举类型转换器 |
+| `set` | 泛型集合、集合运算、JSON 编解码和线程安全实现 |
+| `slice` | 泛型切片过滤、映射、归约、查找、集合运算和展平 |
+| `string` | JSON/逗号分隔数组、随机数字、手机号脱敏和金额元分转换 |
+| `stringcase` | 驼峰、蛇形、短横线、Go 缩写保留和字符串拆分 |
+| `time` | 时间格式化、常用日期区间、时间差和 protobuf 时间转换 |
+| `tls` | 从文件或 PEM 内容创建客户端/服务端 TLS 配置 |
+| `trans` | 基础值与指针、切片与指针切片互转 |
+
+### 独立子模块
+
+| 模块 | 功能 | 说明 |
+| --- | --- | --- |
+| `crypto` | 密码哈希、HMAC、AES、SM4、RSA、ECDSA/ECDH 和 OpenSSL 文件加解密 | 见 [crypto/README.md](crypto/README.md) |
+| `geoip` | GeoLite2、QQWry、IP2Region 的 IP 归属地查询 | 见 [geoip/README.md](geoip/README.md) |
+| `http` | 普通 HTTP、响应体限制、流式响应和 SSE | 见 [http/README.md](http/README.md) |
+| `jwt` | JWT 生成、签名验证、刷新、声明读取和请求头提取 | 见 [jwt/README.md](jwt/README.md) |
+| `translator` | 统一翻译接口和 Alibaba、Baidu、Google、Volc Provider | 见 [translator/README.md](translator/README.md) |
 
 ## 快速示例
 
-### `time` 与 `string`
+### ID、时间和字符串
 
 ```go
 package main
@@ -53,16 +62,18 @@ import (
 	"fmt"
 
 	strutil "github.com/liujitcn/go-utils/string"
+	"github.com/liujitcn/go-utils/id"
 	timeutil "github.com/liujitcn/go-utils/time"
 )
 
 func main() {
-	fmt.Println(timeutil.CalcGrowthRate(100, 120))       // 2000 => 20.00%
+	fmt.Println(id.NewGUIDv7())
+	fmt.Println(timeutil.GetTodayRangeTimeString())
 	fmt.Println(strutil.ConvertYuanStringToFen("12.34")) // 1234
 }
 ```
 
-### `id`
+### 切片、map 和 set
 
 ```go
 package main
@@ -70,190 +81,24 @@ package main
 import (
 	"fmt"
 
-	"github.com/liujitcn/go-utils/id"
-)
-
-func main() {
-	sid := id.GenSnowflakeID()
-	fmt.Println(sid, id.GetGenTime(sid))
-
-	fmt.Println(id.NewGUIDv7())
-	fmt.Println(id.NewGUIDv7NoHyphen())
-	fmt.Println(id.NewXID())
-}
-```
-
-### `time`
-
-```go
-package main
-
-import (
-	"fmt"
-
-	timeutil "github.com/liujitcn/go-utils/time"
-)
-
-func main() {
-	start, end := timeutil.GetTodayRangeTimeString()
-	fmt.Println(start, end)
-}
-```
-
-### `http`
-
-HTTP 客户端会在 `Do` 方法中通过 Kratos log 记录最终请求地址，并在请求失败时记录对应错误信息。
-
-```go
-package main
-
-import (
-	"fmt"
-
-	httputil "github.com/liujitcn/go-utils/http"
-)
-
-func main() {
-	type PingResponse struct {
-		Message string `json:"message"`
-	}
-
-	var result PingResponse
-
-	client := httputil.NewClient(
-		httputil.WithBaseURL("https://example.com"),
-		httputil.WithDefaultHeader("X-App", "shop"),
-		httputil.WithMaxResponseBodyBytes(8 << 20),
-	)
-
-	err := client.Get("/ping", &result, httputil.WithQuery("lang", "zh-CN"))
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(result.Message)
-}
-```
-
-也可以使用包级单例静态方法：
-
-```go
-package main
-
-import (
-	"fmt"
-
-	httputil "github.com/liujitcn/go-utils/http"
-)
-
-func main() {
-	type PingResponse struct {
-		Message string `json:"message"`
-	}
-
-	var result PingResponse
-
-	httputil.Init(
-		httputil.WithBaseURL("https://example.com"),
-		httputil.WithDefaultHeader("X-App", "shop"),
-	)
-
-	err := httputil.Get("/ping", &result, httputil.WithQuery("lang", "zh-CN"))
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(result.Message)
-}
-```
-
-### `slice`
-
-```go
-package main
-
-import (
-	"fmt"
-
+	maputil "github.com/liujitcn/go-utils/map"
+	"github.com/liujitcn/go-utils/set"
 	"github.com/liujitcn/go-utils/slice"
 )
 
 func main() {
-	arr := []int{1, 2, 3, 4}
-	evens := slice.Filter(arr, func(v, _ int, _ []int) bool { return v%2 == 0 })
-	fmt.Println(evens) // [2 4]
+	values := slice.Filter([]int{1, 2, 3, 4}, func(value, _ int, _ []int) bool {
+		return value%2 == 0
+	})
+	merged := maputil.Merge(map[string]int{"a": 1}, map[string]int{"a": 2, "b": 3})
+	items := set.New("a", "b", "a")
+	fmt.Println(values, merged, set.Sorted(items))
 }
 ```
 
-### `translator`
+`map.Drop` 会直接修改传入的 map；`set.New` 创建线程安全集合，需要无锁访问时使用 `set.NewThreadUnsafeSet`。
 
-翻译能力按厂商拆分为独立模块。以下示例使用阿里云 Provider：
-
-```go
-package main
-
-import (
-	"context"
-	"fmt"
-
-	"github.com/liujitcn/go-utils/translator/alibaba"
-)
-
-func main() {
-	client, err := alibaba.NewTranslator("access-key-id", "access-key-secret")
-	if err != nil {
-		panic(err)
-	}
-
-	result, err := client.Translate(context.Background(), "Hello", "en", "zh")
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(result)
-}
-```
-
-### `set`
-
-```go
-package main
-
-import (
-	"fmt"
-
-	"github.com/liujitcn/go-utils/set"
-)
-
-func main() {
-	// NewSet 创建线程安全集合；NewThreadUnsafeSet 创建非线程安全集合。
-	items := set.NewSet("a", "b", "a")
-	items.Add("c")
-
-	fmt.Println(items.Contains("b"))   // true
-	fmt.Println(items.Cardinality())    // 3
-	fmt.Println(set.Sorted(items))      // [a b c]
-
-	unsafeItems := set.NewThreadUnsafeSet("x", "y", "x")
-	fmt.Println(unsafeItems.Contains("x", "y")) // true
-}
-```
-
-### `map`
-
-```go
-package main
-
-import (
-	"fmt"
-	"maps"
-	"slices"
-)
-
-func main() {
-	m := map[string]int{"a": 1, "b": 2}
-	fmt.Println(slices.Collect(maps.Keys(m)))
-}
-```
-
-### `mapper`
+### DTO 与实体映射
 
 ```go
 package main
@@ -265,13 +110,8 @@ import (
 	"github.com/liujitcn/go-utils/mapper"
 )
 
-type UserDTO struct {
-	CreatedAt string
-}
-
-type UserEntity struct {
-	CreatedAt time.Time
-}
+type UserDTO struct { CreatedAt string }
+type UserEntity struct { CreatedAt time.Time }
 
 func main() {
 	m := mapper.NewCopierMapper[UserDTO, UserEntity]()
@@ -280,57 +120,9 @@ func main() {
 }
 ```
 
-如需显式复用时间转换器，也可单独追加：
+映射器默认注册 `time.Time` 与字符串、常用基础切片与 JSON 字符串的转换；未知类型可以通过 `AppendConverter` 或 `AppendConverters` 追加规则。复制配置或类型不匹配会触发 panic，应在开发阶段修正映射配置。
 
-```go
-func main() {
-	m := mapper.NewCopierMapper[UserDTO, UserEntity]()
-	m.AppendConverters(mapper.NewTimeTypeConverter().NewConverterPair())
-}
-```
-
-如需处理 JSON 字符串与对象互转，可按需追加转换器：
-
-```go
-type Profile struct {
-	Name string `json:"name"`
-}
-
-type UserDTO struct {
-	Profile string
-}
-
-type UserEntity struct {
-	Profile Profile
-}
-
-func main() {
-	m := mapper.NewCopierMapper[UserDTO, UserEntity]()
-	m.AppendConverters(mapper.NewJSONTypeConverter[Profile]().NewConverterPair())
-}
-```
-
-如需处理 JSON 字符串与数组互转，可直接追加对应数组类型的 JSON 转换器：
-
-```go
-type UserDTO struct {
-	RoleIDs string
-	Tags    string
-}
-
-type UserEntity struct {
-	RoleIDs []int64
-	Tags    []string
-}
-
-func main() {
-	m := mapper.NewCopierMapper[UserDTO, UserEntity]()
-	m.AppendConverters(mapper.NewJSONTypeConverter[[]int64]().NewConverterPair())
-	m.AppendConverters(mapper.NewJSONTypeConverter[[]string]().NewConverterPair())
-}
-```
-
-### `string`
+### HTTP 客户端
 
 ```go
 package main
@@ -338,18 +130,26 @@ package main
 import (
 	"fmt"
 
-	strutil "github.com/liujitcn/go-utils/string"
+	httputil "github.com/liujitcn/go-utils/http"
 )
 
 func main() {
-	fmt.Println(strutil.ConvertStringToInt64Array("1,2, 3"))
-	fmt.Println(strutil.DesensitizePhone("13812345678"))
-	fmt.Println(strutil.ConvertYuanStringToFen("12.34")) // 1234
-	fmt.Println(strutil.ConvertFenToYuanString(1234))    // 12.34
+	client := httputil.NewClient(
+		httputil.WithBaseURL("https://example.com"),
+		httputil.WithDefaultHeader("X-App", "demo"),
+		httputil.WithMaxResponseBodyBytes(8<<20),
+	)
+	var result struct { Message string `json:"message"` }
+	if err := client.Get("/ping", &result); err != nil {
+		panic(err)
+	}
+	fmt.Println(result.Message)
 }
 ```
 
-### `trans`
+普通请求使用 `Get`、`Post` 等方法直接解码 JSON；需要读取原始响应时使用 `Do`，长连接使用 `DoStream` 或 `DoSSE`。普通请求默认 30 秒超时并记录最终 URL，流式请求会忽略客户端总超时，长连接仍应通过 `WithContext` 取消。
+
+### JWT
 
 ```go
 package main
@@ -357,16 +157,27 @@ package main
 import (
 	"fmt"
 
-	"github.com/liujitcn/go-utils/trans"
+	jwtutil "github.com/liujitcn/go-utils/jwt"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 func main() {
-	name := new("alice")
-	fmt.Println(trans.StringValue(name))
+	secret := []byte("replace-with-a-secret")
+	token, err := jwtutil.GenerateJWT(
+		jwt.MapClaims{"sub": "user-1"},
+		secret,
+		jwt.SigningMethodHS256,
+	)
+	if err != nil { panic(err) }
+	claims, err := jwtutil.VerifyJWT(token, secret)
+	if err != nil { panic(err) }
+	fmt.Println(claims["sub"])
 }
 ```
 
-### `geoip`
+`ParseJWTPayload`、`GetJWTHeader`、`ValidateJWTAlgorithm` 等解析辅助函数不验证签名；处理不可信 token 时应先使用 `VerifyJWT`，再读取声明。
+
+### IP 归属地
 
 ```go
 package main
@@ -379,59 +190,44 @@ import (
 
 func main() {
 	client := qqwry.NewClient()
-	ret, err := client.Query("47.108.149.89")
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("country=%s province=%s city=%s isp=%s\n", ret.Country, ret.Province, ret.City, ret.ISP)
+	result, err := client.Query("47.108.149.89")
+	if err != nil { panic(err) }
+	fmt.Printf("%s %s %s %s\n", result.Country, result.Province, result.City, result.ISP)
 }
 ```
 
-## 子模块说明
+三种查询实现都使用包内嵌数据：`geolite` 支持 IPv4/IPv6 城市信息，`qqwry` 主要支持 IPv4，`ip2region` 支持 IPv4/IPv6 和可选缓存策略。`geolite.Client` 和 `ip2region.Client` 使用完毕后需要调用 `Close`。
 
-- `crypto`：见 [crypto/README.md](crypto/README.md)
-- `geoip`：见 [geoip/README.md](geoip/README.md)
-- `stringcase`：见 [stringcase/README.md](stringcase/README.md)
-- `translator`：见 [translator/README.md](translator/README.md)
-- ECDH 使用建议：先通过 `Encrypt` 交换公钥，再用 `DeriveSharedSecret` 生成共享密钥；`Verify` 的第一个参数需传共享密钥的 Base64 字符串。
+## 重要行为
+
+- `time` 默认按 `Asia/Shanghai` 解析字符串；可用 `RefreshDefaultTimeLocation` 切换时区。常用字符串格式为 `2006-01-02`、`2006-01-02 15:04:05`。
+- `ip.GetClientRealIP` 按 `X-Forwarded-For`、`X-Real-IP`、`RemoteAddr` 顺序读取地址。只有在代理链可信时才应直接信任这些请求头。
+- `io.ReadFile`、目录和权限判断函数以返回空值或 `false` 表示失败；需要区分具体原因时请使用标准库 `os` API。
+- `tls.LoadServerTlsConfig*` 传入 CA 后会要求并校验客户端证书，形成双向 TLS；`insecureSkipVerify` 仅用于服务端配置中的 `tls.Config` 字段，应谨慎使用。
+- AES-CBC、SM4-CBC 保留用于兼容既有数据；新数据优先使用带认证的 AES-GCM 或 SM4-GCM。
 
 ## 测试
 
-仓库根目录已提交 `go.work`，用于把根模块及 `crypto`、`geoip`、`http`、`jwt`、`translator` 和各翻译 Provider 独立子模块纳入同一个本地工作区。
-
-仓库统一忽略 macOS、Linux 和 Windows 开发环境产生的常见本地文件，避免无关文件进入版本控制。
-
-在仓库根目录执行根模块测试：
+根目录的 `go.work` 将所有本地模块纳入同一工作区。可在仓库根目录运行：
 
 ```bash
 go test ./...
 ```
 
-进入独立子模块执行对应模块测试：
+也可以分别测试独立子模块：
 
 ```bash
-cd crypto && go test ./...
-cd http && go test ./...
-cd jwt && go test ./...
-cd geoip && go test ./...
-cd translator && go test ./...
-cd translator/alibaba && go test ./...
-cd translator/baidu && go test ./...
-cd translator/google && go test ./...
-cd translator/volc && go test ./...
+for module in crypto geoip http jwt translator translator/alibaba translator/baidu translator/google translator/volc; do
+  (cd "$module" && go test ./...)
+done
 ```
 
-## 打 Tag
+## 目录说明
 
-```bash
-make tag                    # 默认从仓库根目录递归检查 go.mod 并自动打/推送 tag（含根模块）
-make tag MODULE=crypto      # 从 crypto 目录开始递归检查 go.mod 并打 tag
-make tag MODULE=stringcase  # 从 stringcase 目录开始递归检查 go.mod 并打 tag
+```text
+.
+├── byte id ip io map mapper set slice string stringcase time tls trans  # 根模块工具包
+├── crypto geoip http jwt translator                                    # 独立子模块
+├── go.work                                                             # 本地多模块工作区
+└── scripts/tag_release.py                                              # 版本标签辅助脚本
 ```
-
-说明：上述命令通过 `python3 scripts/tag_release.py` 执行统一的版本计算与远程更新检测逻辑。
-
-## 来源与版权说明
-
-本仓库大部分代码来源于开源项目 [tx7do/go-utils](https://github.com/tx7do/go-utils)，在此基础上结合当前项目需求进行了整理与调整。
-若涉及版权或授权边界问题，请优先以上游项目许可证与仓库声明为准，并联系维护者处理。
