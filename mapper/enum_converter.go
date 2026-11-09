@@ -57,7 +57,7 @@ func (m *EnumTypeConverter[DTO, ENTITY]) NewConverterPair() []copier.TypeConvert
 }
 
 // NewGenericTypeConverterPair 创建通用的双向类型转换器对。
-func NewGenericTypeConverterPair[A interface{}, B interface{}](
+func NewGenericTypeConverterPair[A any, B any](
 	srcType A,
 	dstType B,
 	fromFn func(src A) B,
@@ -67,14 +67,14 @@ func NewGenericTypeConverterPair[A interface{}, B interface{}](
 		{
 			SrcType: srcType,
 			DstType: dstType,
-			Fn: func(src interface{}) (interface{}, error) {
+			Fn: func(src any) (any, error) {
 				return fromFn(src.(A)), nil
 			},
 		},
 		{
 			SrcType: dstType,
 			DstType: srcType,
-			Fn: func(src interface{}) (interface{}, error) {
+			Fn: func(src any) (any, error) {
 				return toFn(src.(B)), nil
 			},
 		},

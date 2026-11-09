@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"maps"
+	"slices"
 )
 
 // Set 表示一组不重复的可比较元素，覆盖 golang-set/v2 v2.7.0 接口并保留本仓库既有便捷方法。
@@ -125,10 +126,7 @@ func NewThreadUnsafeSetFromMapKeys[T comparable, V any](values map[T]V) Set[T] {
 
 // newThreadUnsafeSetWithSize 按指定容量创建非线程安全集合实现。
 func newThreadUnsafeSetWithSize[T comparable](size int) *threadUnsafeSet[T] {
-	if size < 0 {
-		size = 0
-	}
-	return &threadUnsafeSet[T]{items: make(map[T]struct{}, size)}
+	return &threadUnsafeSet[T]{items: make(map[T]struct{}, max(size, 0))}
 }
 
 // Add 向集合中添加元素，并返回元素是否为新增。
@@ -181,9 +179,8 @@ func (s *threadUnsafeSet[T]) Clear() {
 	if s == nil {
 		return
 	}
-	for value := range s.items {
-		delete(s.items, value)
-	}
+	// 内建 clear 也能移除不等于自身的 NaN 键。
+	clear(s.items)
 }
 
 // Clone 复制集合，返回非线程安全集合。
@@ -193,9 +190,7 @@ func (s *threadUnsafeSet[T]) Clone() Set[T] {
 		return cloned
 	}
 
-	for value := range s.items {
-		cloned.add(value)
-	}
+	maps.Copy(cloned.items, s.items)
 	return cloned
 }
 
@@ -259,12 +254,7 @@ func (s *threadUnsafeSet[T]) ContainsAnyElement(other Set[T]) bool {
 		return false
 	}
 
-	for _, value := range other.ToSlice() {
-		if s.ContainsOne(value) {
-			return true
-		}
-	}
-	return false
+	return slices.ContainsFunc(other.ToSlice(), s.ContainsOne)
 }
 
 // Difference 计算当前集合相对另一个集合的差集。
@@ -522,8 +512,5 @@ func (s *threadUnsafeSet[T]) ensureItems(size int) {
 	if s.items != nil {
 		return
 	}
-	if size < 0 {
-		size = 0
-	}
-	s.items = make(map[T]struct{}, size)
+	s.items = make(map[T]struct{}, max(size, 0))
 }

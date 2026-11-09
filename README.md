@@ -202,23 +202,26 @@ func main() {
 
 - `time` 默认按 `Asia/Shanghai` 解析字符串；可用 `RefreshDefaultTimeLocation` 切换时区。常用字符串格式为 `2006-01-02`、`2006-01-02 15:04:05`。
 - `ip.GetClientRealIP` 按 `X-Forwarded-For`、`X-Real-IP`、`RemoteAddr` 顺序读取地址。只有在代理链可信时才应直接信任这些请求头。
+- `set.Clear` 会清空全部元素，包括浮点 `NaN` 键；线程安全集合在写锁内完成清空。
 - `io.ReadFile`、目录和权限判断函数以返回空值或 `false` 表示失败；需要区分具体原因时请使用标准库 `os` API。
 - `tls.LoadServerTlsConfig*` 传入 CA 后会要求并校验客户端证书，形成双向 TLS；`insecureSkipVerify` 仅用于服务端配置中的 `tls.Config` 字段，应谨慎使用。
 - AES-CBC、SM4-CBC 保留用于兼容既有数据；新数据优先使用带认证的 AES-GCM 或 SM4-GCM。
 
 ## 测试
 
-根目录的 `go.work` 将所有本地模块纳入同一工作区。可在仓库根目录运行：
+根目录的 `go.work` 将所有本地模块纳入同一工作区，但根目录的 `./...` 只覆盖根模块，不包含独立子模块。可在仓库根目录运行：
 
 ```bash
 go test ./...
+go vet ./...
+go fix -diff ./...
 ```
 
-也可以分别测试独立子模块：
+独立子模块需要分别检查：
 
 ```bash
 for module in crypto geoip http jwt translator translator/alibaba translator/baidu translator/google translator/volc; do
-  (cd "$module" && go test ./...)
+  (cd "$module" && go test ./... && go vet ./... && go fix -diff ./...)
 done
 ```
 

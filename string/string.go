@@ -83,7 +83,7 @@ func ConvertStringToInt64Array(s string) []int64 {
 // GetRandomString 生成指定长度的随机数字字符串。
 func GetRandomString(length int) string {
 	digits := make([]byte, length)
-	for i := 0; i < length; i++ {
+	for i := range length {
 		n, _ := rand.Int(rand.Reader, big.NewInt(10))
 		digits[i] = byte(n.Int64() + '0') // 生成 0~9 的 ASCII 字符
 	}
@@ -108,7 +108,7 @@ func DesensitizePhone(phone string) string {
 }
 
 // ConvertAnyToJsonString 将任意对象转换为 JSON 字符串。
-func ConvertAnyToJsonString(s interface{}) string {
+func ConvertAnyToJsonString(s any) string {
 	t := reflect.TypeOf(s)
 	if t == nil || s == nil {
 		return "{}"

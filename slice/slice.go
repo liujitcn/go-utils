@@ -1,6 +1,10 @@
 package slice
 
-import "github.com/liujitcn/go-utils/set"
+import (
+	"slices"
+
+	"github.com/liujitcn/go-utils/set"
+)
 
 type number interface {
 	~int | ~int8 | ~int16 | ~int32 | ~int64 |
@@ -67,8 +71,7 @@ func FindIndex[T any](slice []T, predicate func(value T, index int, slice []T) b
 
 // FindLastIndex 从后向前查找第一个满足条件元素的索引。
 func FindLastIndex[T any](slice []T, predicate func(value T, index int, slice []T) bool) int {
-	for i := len(slice) - 1; i >= 0; i-- {
-		el := slice[i]
+	for i, el := range slices.Backward(slice) {
 		if ok := predicate(el, i, slice); ok {
 			return i
 		}
@@ -78,8 +81,7 @@ func FindLastIndex[T any](slice []T, predicate func(value T, index int, slice []
 
 // FindLastIndexOf 从后向前查找指定值首次出现的索引。
 func FindLastIndexOf[T comparable](slice []T, value T) int {
-	for i := len(slice) - 1; i >= 0; i-- {
-		el := slice[i]
+	for i, el := range slices.Backward(slice) {
 		if el == value {
 			return i
 		}

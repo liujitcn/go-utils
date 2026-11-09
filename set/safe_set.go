@@ -1,6 +1,9 @@
 package set
 
-import "sync"
+import (
+	"slices"
+	"sync"
+)
 
 type threadSafeSet[T comparable] struct {
 	mu    sync.RWMutex
@@ -67,10 +70,7 @@ func SafeFromMapKeys[T comparable, V any](values map[T]V) Set[T] {
 
 // newThreadSafeSetWithSize 按指定容量创建线程安全集合实现。
 func newThreadSafeSetWithSize[T comparable](size int) *threadSafeSet[T] {
-	if size < 0 {
-		size = 0
-	}
-	return &threadSafeSet[T]{items: make(map[T]struct{}, size)}
+	return &threadSafeSet[T]{items: make(map[T]struct{}, max(size, 0))}
 }
 
 // Add 向集合中添加元素，并返回元素是否为新增。
@@ -137,9 +137,8 @@ func (s *threadSafeSet[T]) Clear() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	for value := range s.items {
-		delete(s.items, value)
-	}
+	// 内建 clear 也能移除不等于自身的 NaN 键。
+	clear(s.items)
 }
 
 // Clone 复制集合，返回线程安全集合。
@@ -218,20 +217,10 @@ func (s *threadSafeSet[T]) ContainsAnyElement(other Set[T]) bool {
 	}
 
 	if s.Cardinality() < other.Cardinality() {
-		for _, value := range s.ToSlice() {
-			if other.ContainsOne(value) {
-				return true
-			}
-		}
-		return false
+		return slices.ContainsFunc(s.ToSlice(), other.ContainsOne)
 	}
 
-	for _, value := range other.ToSlice() {
-		if s.ContainsOne(value) {
-			return true
-		}
-	}
-	return false
+	return slices.ContainsFunc(other.ToSlice(), s.ContainsOne)
 }
 
 // Difference 计算当前集合相对另一个集合的差集。
@@ -498,8 +487,5 @@ func (s *threadSafeSet[T]) ensureItemsLocked(size int) {
 	if s.items != nil {
 		return
 	}
-	if size < 0 {
-		size = 0
-	}
-	s.items = make(map[T]struct{}, size)
+	s.items = make(map[T]struct{}, max(size, 0))
 }

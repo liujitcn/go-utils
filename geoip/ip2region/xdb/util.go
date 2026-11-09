@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"net"
+	"slices"
 )
 
 // ParseIP 解析 IP 字符串为字节切片。
@@ -48,11 +49,11 @@ func IPCompare(ip1, ip2 []byte) int {
 
 // IPAddOne 对 IP 字节切片执行加一操作。
 func IPAddOne(ip []byte) []byte {
-	var r = make([]byte, len(ip))
+	r := make([]byte, len(ip))
 	copy(r, ip)
-	for i := len(ip) - 1; i >= 0; i-- {
+	for i := range slices.Backward(r) {
 		r[i]++
-		if r[i] != 0 { // No overflow
+		if r[i] != 0 { // 没有进位时停止。
 			break
 		}
 	}
@@ -62,14 +63,14 @@ func IPAddOne(ip []byte) []byte {
 
 // IPSubOne 对 IP 字节切片执行减一操作。
 func IPSubOne(ip []byte) []byte {
-	var r = make([]byte, len(ip))
+	r := make([]byte, len(ip))
 	copy(r, ip)
-	for i := len(ip) - 1; i >= 0; i-- {
-		if r[i] != 0 { // No borrow needed
+	for i := range slices.Backward(r) {
+		if r[i] != 0 { // 无需借位时停止。
 			r[i]--
 			break
 		}
-		r[i] = 0xFF // borrow from the next byte
+		r[i] = 0xFF // 向高位借位。
 	}
 
 	return r

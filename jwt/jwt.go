@@ -6,7 +6,9 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"maps"
 	"net/http"
+	"slices"
 	"time"
 	"uuid"
 
@@ -62,7 +64,7 @@ func ParseJWTClaimsToStruct[T any](tokenString string) (*T, error) {
 // VerifyJWT 验证 JWT 的签名
 func VerifyJWT(tokenString string, secretKey []byte) (jwt.MapClaims, error) {
 	// 解析并验证 JWT
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (any, error) {
 		// 确保使用的是 HMAC 签名方法
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
@@ -82,7 +84,7 @@ func VerifyJWT(tokenString string, secretKey []byte) (jwt.MapClaims, error) {
 }
 
 // GetJWTClaims 获取 JWT 的 claims 映射。
-func GetJWTClaims(tokenString string) (map[string]interface{}, error) {
+func GetJWTClaims(tokenString string) (map[string]any, error) {
 	claims, err := ParseJWTPayload(tokenString)
 	if err != nil {
 		return nil, err
@@ -205,7 +207,7 @@ func RefreshJWT(tokenString string, secretKey []byte, newExpiration time.Time) (
 }
 
 // GenerateJWTWithHeader 生成带自定义头部的JWT
-func GenerateJWTWithHeader(payload jwt.MapClaims, secretKey []byte, signingMethod jwt.SigningMethod, customHeader map[string]interface{}) (string, error) {
+func GenerateJWTWithHeader(payload jwt.MapClaims, secretKey []byte, signingMethod jwt.SigningMethod, customHeader map[string]any) (string, error) {
 	// 检查密钥是否为空
 	if len(secretKey) == 0 {
 		return "", fmt.Errorf("secret key cannot be empty")
@@ -221,9 +223,7 @@ func GenerateJWTWithHeader(payload jwt.MapClaims, secretKey []byte, signingMetho
 	token := jwt.NewWithClaims(signingMethod, payload)
 
 	// 添加自定义头部
-	for key, value := range customHeader {
-		token.Header[key] = value
-	}
+	maps.Copy(token.Header, customHeader)
 
 	// 使用密钥签名生成 JWT
 	signedToken, err := token.SignedString(secretKey)
@@ -291,19 +291,14 @@ func ValidateJWTAudience(tokenString string, expectedAudience string) (bool, err
 	}
 
 	// 获取 `aud` 字段
-	audience, err := claims.GetAudience()
+	var audience jwt.ClaimStrings
+	audience, err = claims.GetAudience()
 	if err != nil {
 		return false, err
 	}
 
 	// 验证 `aud` 是否包含预期值
-	for _, aud := range audience {
-		if aud == expectedAudience {
-			return true, nil
-		}
-	}
-
-	return false, nil
+	return slices.Contains(audience, expectedAudience), nil
 }
 
 // ValidateJWTAlgorithm 验证JWT算法
@@ -355,7 +350,7 @@ func IsJWTExpired(tokenString string) (bool, error) {
 }
 
 // GetJWTHeader 获取JWT头部
-func GetJWTHeader(tokenString string) (map[string]interface{}, error) {
+func GetJWTHeader(tokenString string) (map[string]any, error) {
 	// 使用 jwt.Parser 解析 JWT，不验证签名
 	parser := jwt.NewParser(jwt.WithoutClaimsValidation())
 	token, _, err := parser.ParseUnverified(tokenString, jwt.MapClaims{})

@@ -106,7 +106,7 @@ func compareHash(h1, h2 []byte) bool {
 		return false
 	}
 	result := 0
-	for i := 0; i < len(h1); i++ {
+	for i := range h1 {
 		result |= int(h1[i] ^ h2[i])
 	}
 	return result == 0

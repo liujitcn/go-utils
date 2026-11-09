@@ -42,9 +42,9 @@ func NewTranslator(accessKeyID, accessKeySecret string, opts ...Option) (*Transl
 	}
 
 	config := &openapi.Config{
-		AccessKeyId:     tea.String(accessKeyID),
-		AccessKeySecret: tea.String(accessKeySecret),
-		Endpoint:        tea.String(fmt.Sprintf("mt.%s.aliyuncs.com", translator.regionID)),
+		AccessKeyId:     new(accessKeyID),
+		AccessKeySecret: new(accessKeySecret),
+		Endpoint:        new(fmt.Sprintf("mt.%s.aliyuncs.com", translator.regionID)),
 	}
 
 	var client *alimt.Client
@@ -73,11 +73,11 @@ func (translator *Translator) Translate(
 	}
 
 	request := &alimt.TranslateGeneralRequest{
-		SourceLanguage: tea.String(sourceLang),
-		TargetLanguage: tea.String(targetLang),
-		SourceText:     tea.String(source),
-		FormatType:     tea.String("text"),
-		Scene:          tea.String("general"),
+		SourceLanguage: new(sourceLang),
+		TargetLanguage: new(targetLang),
+		SourceText:     new(source),
+		FormatType:     new("text"),
+		Scene:          new("general"),
 	}
 	runtime := &service.RuntimeOptions{}
 	if deadline, ok := ctx.Deadline(); ok {
@@ -89,8 +89,8 @@ func (translator *Translator) Translate(
 		if timeoutMilliseconds == 0 {
 			timeoutMilliseconds = 1
 		}
-		runtime.ConnectTimeout = tea.Int(timeoutMilliseconds)
-		runtime.ReadTimeout = tea.Int(timeoutMilliseconds)
+		runtime.ConnectTimeout = new(timeoutMilliseconds)
+		runtime.ReadTimeout = new(timeoutMilliseconds)
 	}
 
 	var response *alimt.TranslateGeneralResponse

@@ -224,7 +224,7 @@ func pbkdf2Key(password, salt []byte, iterations, keyLength int, hashFunc func()
 			prf.Reset()
 			prf.Write(u)
 			u = prf.Sum(nil)
-			for k := 0; k < len(f); k++ {
+			for k := range f {
 				f[k] ^= u[k]
 			}
 		}

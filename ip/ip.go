@@ -20,8 +20,7 @@ func GetClientRealIP(request *http.Request) string {
 	// 优先读取代理链路中的真实客户端 IP。
 	forwardedFor := request.Header.Get(headerKeyXForwardedFor)
 	if forwardedFor != "" {
-		ips := strings.Split(forwardedFor, ",")
-		for _, item := range ips {
+		for item := range strings.SplitSeq(forwardedFor, ",") {
 			clientIP := strings.TrimSpace(item)
 			if net.ParseIP(clientIP) != nil {
 				return clientIP
